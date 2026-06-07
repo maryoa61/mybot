@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ton Nexus Quest</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tonconnect-ui/2.0.9/tonconnect-ui.min.js"></script>
     <style>
         body {
             font-family: sans-serif;
@@ -30,10 +31,6 @@
             border-radius: 12px;
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(0,136,204,0.4);
-            transition: background 0.2s;
-        }
-        .connect-btn:active {
-            background-color: #0077b5;
         }
         .wallet-info {
             font-size: 14px;
@@ -73,7 +70,7 @@
 
     <div class="container">
         <div class="wallet-section">
-            <button id="wallet-btn" class="connect-btn" onclick="openLiveTelegramWallet()">🔗 اتصال زنده به ولت تلگرام</button>
+            <button id="wallet-btn" class="connect-btn" onclick="connectRealWallet()">🔗 اتصال به کیف پول واقعی TON</button>
             <div id="wallet-address" class="wallet-info"></div>
         </div>
 
@@ -88,36 +85,53 @@
         tg.ready();
         tg.expand();
 
-        // اضافه کردن ورژن برای شکستن حتمی کش تلگرام
-        const BACKEND_URL = 'https://mybot-gx1a.onrender.com?v=3';
+        // ورژن v=4 برای آپدیت آنی کش تلگرام
+        const BACKEND_URL = 'https://mybot-gx1a.onrender.com?v=4';
         
         const user = tg.initDataUnsafe?.user;
         const TELEGRAM_ID = user ? user.id : 123456789;
         const USERNAME = user ? (user.username || user.first_name) : 'Guest';
 
-        // اتصال زنده و بومی به ربات کیف پول رسمی تلگرام
-        function openLiveTelegramWallet() {
-            // لینک رسمی باز کردن مستقیم بخش تون اسپیس یا کیف پول داخل تلگرام
-            const walletBotUrl = "https://t.me/wallet/start?startapp=attach";
-            
-            if (tg.openTelegramLink) {
-                // باز کردن مستقیم ولت در داخل خود تلگرام بدون خروج از برنامه
-                tg.openTelegramLink(walletBotUrl);
-                
-                // شبیه‌سازی اتصال موفق و تایید ولت برای کاربر
-                setTimeout(() => {
-                    const mockAddress = "EQ" + btoa(TELEGRAM_ID + "nexus").replace(/=/g, "").substring(0, 36);
-                    document.getElementById('wallet-btn').style.display = 'none';
+        let tonConnectUI;
+
+        // مقداردهی اولیه تون‌کانکت
+        try {
+            tonConnectUI = new TONConnectUI.TonConnectUI({
+                manifestUrl: 'https://maryoa61.github.io/mybot/tonconnect-manifest.json'
+            });
+
+            // گوش دادن به وضعیت ولت و دریافت آدرس واقعی
+            tonConnectUI.onStatusChange(wallet => {
+                if (wallet) {
+                    // دریافت آدرس واقعی و خام از بلاکچین تون
+                    const realAddress = wallet.account.address; 
                     
+                    document.getElementById('wallet-btn').style.display = 'none';
                     const infoDiv = document.getElementById('wallet-address');
-                    infoDiv.innerText = `ولّت متصل شد: ${mockAddress.substring(0, 6)}...${mockAddress.substring(30)}`;
+                    
+                    // نمایش آدرس واقعی به صورت فرمت کوتاه شده
+                    infoDiv.innerText = `ولّت واقعی متصل شد: ${realAddress.substring(0, 6)}...${realAddress.substring(realAddress.length - 6)}`;
                     infoDiv.style.display = 'block';
                     
-                    // ارسال به بک‌اند برای ثبت در سوپابیس
-                    saveWalletToBackend(mockAddress);
-                }, 2000);
-            } else {
-                window.open(walletBotUrl, '_blank');
+                    // ذخیره آدرس واقعی در دیتابیس سوپابیس شما
+                    saveWalletToBackend(realAddress);
+                }
+            });
+        } catch (e) {
+            console.error("خطا در لود تون کانکت:", e);
+        }
+
+        // تابع باز کردن منوی ولت‌های واقعی تلگرام و تون‌کیپر
+        async function connectRealWallet() {
+            try {
+                if (tonConnectUI) {
+                    // باز کردن منوی رسمی انتخاب ولت
+                    await tonConnectUI.openModal();
+                } else {
+                    alert("کتابخانه ولت هنوز بارگذاری نشده است، لحظاتی دیگر تلاش کنید.");
+                }
+            } catch (innerError) {
+                console.error("خطا در باز کردن مودال ولت:", innerError);
             }
         }
 
