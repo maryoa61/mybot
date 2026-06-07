@@ -1,73 +1,53 @@
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تست مینی‌اپ TON</title>
-    <!-- بارگذاری اسکریپت رسمی اتصالات تون -->
-    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
-    <style>
-        body {
-            font-family: sans-serif;
-            background-color: #1c1c1e;
-            color: white;
-            text-align: center;
-            padding: 20px;
-            margin: 0;
-        }
-        .container {
-            margin-top: 50px;
-        }
-        #ton-connect-btn {
-            display: inline-block;
-            margin-bottom: 30px;
-        }
-        .click-btn {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            border: none;
-            background: linear-gradient(145deg, #0088cc, #0077b5);
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 8px 15px rgba(0,136,204,0.4);
-        }
-        .click-btn:active {
-            transform: scale(0.95);
-        }
-        .score-board {
-            font-size: 28px;
-            margin-top: 20px;
-        }
-    </style>
-</head>
-<body>
+<script>
+        // آدرس سرور رندر شما
+        const BACKEND_URL = 'https://mybot-gx1a.onrender.com';
+        
+        // اینجا به صورت موقت یک تلگرام آی‌دی تستی می‌گذاریم تا بعداً از خود تلگرام بگیریم
+        const TELEGRAM_ID = 123456789; 
+        const USERNAME = 'TestUser';
 
-    <div class="container">
-        <!-- دکمه اتصال به ولت تون کلاودفایر -->
-        <div id="ton-connect-btn"></div>
-
-        <div class="game-area">
-            <button class="click-btn" onclick="increaseScore()">بزن!</button>
-            <div class="score-board">امتیاز: <span id="score">0</span></div>
-        </div>
-    </div>
-
-    <script>
         // راه‌اندازی دکمه اتصال به ولت تون
         const tonConnectUI = new TONConnectUI.TonConnectUI({
-            manifestUrl: 'https://raw.githubusercontent.com/ton-community/tonconnect-manifest/main/tonconnect-manifest.json', // مانیفست تستی
+            manifestUrl: 'https://raw.githubusercontent.com/ton-community/tonconnect-manifest/main/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-btn'
         });
 
-        // منطق ساده بازی برای شمارش امتیاز
-        let score = 0;
-        function increaseScore() {
-            score++;
-            document.getElementById('score').innerText = score;
+        // دریافت امتیاز اولیه کاربر از دیتابیس به محض لود شدن صفحه
+        async function loadUserData() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/user?telegram_id=${TELEGRAM_ID}&username=${USERNAME}`);
+                const data = await response.json();
+                if (data && data.clicks !== undefined) {
+                    document.getElementById('score').innerText = data.clicks;
+                }
+            } catch (error) {
+                console.error("خطا در بارگذاری اطلاعات کاربر:", error);
+            }
         }
+
+        // تابع ثبت کلیک و افزایش امتیاز در سرور و دیتابیس
+        async function increaseScore() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/click`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        telegram_id: TELEGRAM_ID
+                    })
+                });
+                
+                const data = await response.json();
+                if (data && data.clicks !== undefined) {
+                    // به‌روزرسانی گرافیکی امتیاز در صفحه بر اساس دیتابیس
+                    document.getElementById('score').innerText = data.clicks;
+                }
+            } catch (error) {
+                console.error("خطا در ثبت کلیک:", error);
+            }
+        }
+
+        // اجرای تابع لود اولیه هنگام باز شدن صفحه
+        loadUserData();
     </script>
-</body>
-</html>
