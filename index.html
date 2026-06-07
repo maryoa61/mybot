@@ -5,68 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ton Nexus Quest</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- استفاده از سرور jsDelivr که در ایران پایداری بیشتری دارد -->
-    <script src="https://cdn.jsdelivr.net/npm/@tonconnect/ui@2.0.9/dist/tonconnect-ui.min.js"></script>
     <style>
-        body {
-            font-family: sans-serif;
-            background-color: #1c1c1e;
-            color: white;
-            text-align: center;
-            padding: 20px;
-            margin: 0;
-            overflow: hidden;
-        }
+        body { font-family: sans-serif; background-color: #1c1c1e; color: white; text-align: center; padding: 20px; margin: 0; overflow: hidden; }
         .container { margin-top: 40px; }
         .wallet-section { margin-bottom: 30px; }
-        .connect-btn {
-            background-color: #0088cc;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 12px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,136,204,0.4);
-        }
-        .wallet-info {
-            font-size: 13px;
-            color: #00ebc7;
-            margin-top: 10px;
-            background: #2c2c2e;
-            padding: 8px;
-            border-radius: 8px;
-            display: none;
-            word-break: break-all;
-        }
-        .click-btn {
-            width: 160px;
-            height: 160px;
-            border-radius: 50%;
-            border: none;
-            background: radial-gradient(circle, #00aaff, #0077b5);
-            color: white;
-            font-size: 26px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(0,170,255,0.5);
-            transition: all 0.1s ease;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        .click-btn:active { transform: scale(0.92); box-shadow: 0 0 10px rgba(0,170,255,0.8); }
-        .score-board { font-size: 32px; margin-top: 25px; font-weight: bold; }
+        .connect-btn { background-color: #0088cc; color: white; border: none; padding: 12px 24px; font-size: 16px; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,136,204,0.4); }
+        .wallet-info { font-size: 13px; color: #00ebc7; margin-top: 10px; background: #2c2c2e; padding: 8px; border-radius: 8px; display: none; word-break: break-all; }
+        .click-btn { width: 160px; height: 160px; border-radius: 50%; border: none; background: radial-gradient(circle, #00aaff, #0077b5); color: white; font-size: 26px; font-weight: bold; cursor: pointer; box-shadow: 0 0 20px rgba(0,170,255,0.5); transition: all 0.1s ease; user-select: none; -webkit-user-select: none; }
+        .click-btn:active { transform: scale(0.92); }
+        .score-board { font-size: 36px; margin-top: 25px; font-weight: bold; }
     </style>
 </head>
 <body>
-
     <div class="container">
         <div class="wallet-section">
-            <button id="wallet-btn" class="connect-btn" onclick="connectRealWallet()">🔗 اتصال به کیف پول واقعی TON</button>
+            <button id="wallet-btn" class="connect-btn" onclick="connectRealWallet()">🔗 اتصال به ولت واقعی TON</button>
             <div id="wallet-address" class="wallet-info"></div>
         </div>
-
         <div class="game-area">
             <button class="click-btn" onclick="increaseScore()">بزن!</button>
             <div class="score-board"><span id="score">0</span></div>
@@ -80,14 +35,26 @@
 
         const BACKEND_URL = 'https://mybot-gx1a.onrender.com';
         const TELEGRAM_ID = tg.initDataUnsafe?.user?.id || 123456789;
-        const USERNAME = tg.initDataUnsafe?.user?.username || 'Guest';
-
+        
         let tonConnectUI;
 
-        // تابع مقداردهی اولیه با چک کردن وجود کتابخانه
-        function initUI() {
-            if (typeof TONConnectUI !== 'undefined') {
-                try {
+        // تابع کمکی برای بارگذاری داینامیک اسکریپت با هندل کردن خطا
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        async function initUI() {
+            try {
+                // تلاش برای بارگذاری از یک CDN فوق‌سریع دیگر
+                await loadScript('https://unpkg.com/@tonconnect/ui@2.0.9/dist/tonconnect-ui.min.js');
+                
+                if (typeof TONConnectUI !== 'undefined') {
                     tonConnectUI = new TONConnectUI.TonConnectUI({
                         manifestUrl: 'https://maryoa61.github.io/mybot/tonconnect-manifest.json'
                     });
@@ -97,15 +64,14 @@
                             const addr = wallet.account.address;
                             document.getElementById('wallet-btn').style.display = 'none';
                             const infoDiv = document.getElementById('wallet-address');
-                            infoDiv.innerText = `ولت متصل: ${addr.substring(0, 6)}...${addr.substring(addr.length - 6)}`;
+                            infoDiv.innerText = `ولت: ${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
                             infoDiv.style.display = 'block';
                             saveWalletToBackend(addr);
                         }
                     });
-                } catch (e) { console.error("Error init:", e); }
-            } else {
-                // اگر لود نشد، ۱ ثانیه دیگر دوباره چک کن
-                setTimeout(initUI, 1000);
+                }
+            } catch (e) {
+                console.error("فیلترینگ اجازه بارگذاری نداد.");
             }
         }
 
@@ -113,8 +79,10 @@
             if (tonConnectUI) {
                 await tonConnectUI.openModal();
             } else {
-                tg.showAlert("در حال بارگذاری زیرساخت ولت... چند لحظه دیگر دوباره بزنید.");
-                initUI();
+                // اگر هنوز لود نشده، از متد جایگزین (لینک مستقیم) استفاده کن
+                const walletUrl = "https://t.me/wallet/start?startapp=attach";
+                tg.openTelegramLink(walletUrl);
+                tg.showAlert("در حال باز کردن کیف پول تلگرام...");
             }
         }
 
@@ -128,35 +96,25 @@
             } catch (e) {}
         }
 
-        async function loadUserData() {
-            try {
-                const response = await fetch(`${BACKEND_URL}/api/user?telegram_id=${TELEGRAM_ID}&username=${USERNAME}`);
-                const data = await response.json();
-                if (data && data.clicks !== undefined) {
-                    document.getElementById('score').innerText = data.clicks;
-                }
-            } catch (e) {}
-        }
-
         async function increaseScore() {
-            // آپدیت سریع بصری برای حس بهتر کاربر
             const scoreEl = document.getElementById('score');
             scoreEl.innerText = parseInt(scoreEl.innerText) + 1;
-
             try {
-                const response = await fetch(`${BACKEND_URL}/api/click`, {
+                const res = await fetch(`${BACKEND_URL}/api/click`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ telegram_id: TELEGRAM_ID })
                 });
-                const data = await response.json();
-                if (data && data.clicks !== undefined) {
-                    scoreEl.innerText = data.clicks;
-                }
+                const data = await res.json();
+                if (data.clicks) scoreEl.innerText = data.clicks;
             } catch (e) {}
         }
 
-        loadUserData();
+        // بارگذاری اولیه امتیاز
+        fetch(`${BACKEND_URL}/api/user?telegram_id=${TELEGRAM_ID}`).then(r => r.json()).then(d => {
+            if (d.clicks) document.getElementById('score').innerText = d.clicks;
+        });
+
         initUI();
     </script>
 </body>
