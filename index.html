@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ton Nexus Quest</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <script src="https://unpkg.com/@tonconnect/ui@2.0.9/dist/tonconnect-ui.min.js"></script>
+    
     <style>
         body {
             font-family: sans-serif;
@@ -17,28 +20,10 @@
         .container {
             margin-top: 40px;
         }
-        .wallet-section {
+        #ton-connect-btn {
+            display: inline-block;
             margin-bottom: 30px;
-        }
-        .connect-btn {
-            background-color: #0088cc;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 10px;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,136,204,0.3);
-        }
-        .wallet-address {
-            font-size: 14px;
-            color: #00ebc7;
-            word-break: break-all;
-            padding: 10px;
-            background: #2c2c2e;
-            border-radius: 10px;
-            display: none;
+            min-height: 40px;
         }
         .click-btn {
             width: 150px;
@@ -62,15 +47,18 @@
             font-size: 28px;
             margin-top: 20px;
         }
+        .wallet-info {
+            font-size: 14px;
+            color: #00ebc7;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <div class="wallet-section">
-            <button id="wallet-btn" class="connect-btn" onclick="requestTelegramWallet()">اتصال به ولت تلگرام</button>
-            <div id="wallet-addr" class="wallet-address"></div>
-        </div>
+        <div id="ton-connect-btn"></div>
+        <div id="wallet-address" class="wallet-info"></div>
 
         <div class="game-area">
             <button class="click-btn" onclick="increaseScore()">بزن!</button>
@@ -89,37 +77,36 @@
         const TELEGRAM_ID = user ? user.id : 123456789;
         const USERNAME = user ? (user.username || user.first_name) : 'Guest';
 
-        // متد بومی تلگرام برای درخواست آدرس ولت بدون نیاز به پکیج تون‌کانکت
-        function requestTelegramWallet() {
-            // تلگرام پنجره ولت داخلی خود را باز می‌کند
-            if (tg.showPopup) {
-                tg.showPopup({
-                    title: 'اتصال کیف پول TON',
-                    message: 'آیا می‌خواهید ولت تلگرام خود را به بازی متصل کنید؟',
-                    buttons: [
-                        {id: 'link', type: 'default', text: 'بله، متصل کن'},
-                        {id: 'cancel', type: 'cancel', text: 'انصراف'}
-                    ]
-                }, function(buttonId) {
-                    if (buttonId === 'link') {
-                        // شبیه‌سازی دریافت ولت متصل به اکانت تلگرام کاربر
-                        // از آنجا که دیتای یوزر تلگرام معتبر است، یک آدرس فرضی بر اساس آیدی کاربر می‌سازیم تا سیستم کار کند
-                        const mockWallet = "EQ" + btoa(TELEGRAM_ID).replace(/=/g, "").substring(0, 40);
+        let tonConnectUI;
+
+        // راه‌اندازی دکمه زنده اتصال به کیف پول
+        function initTonConnect() {
+            try {
+                tonConnectUI = new TONConnectUI.TonConnectUI({
+                    manifestUrl: 'https://maryoa61.github.io/mybot/tonconnect-manifest.json',
+                    buttonRootId: 'ton-connect-btn'
+                });
+
+                // گوش دادن به تغییرات وضعیت ولت (وقتی کاربر وصل یا قطع می‌شود)
+                tonConnectUI.onStatusChange(wallet => {
+                    if (wallet) {
+                        const rawAddress = wallet.account.address;
+                        // تبدیل آدرس به فرمت کوتاه و خوانا برای نمایش
+                        document.getElementById('wallet-address').innerText = 
+                            `ولّت متصل شد: ${rawAddress.substring(0, 6)}...${rawAddress.substring(rawAddress.length - 6)}`;
                         
-                        document.getElementById('wallet-btn').style.display = 'none';
-                        const addrDiv = document.getElementById('wallet-addr');
-                        addrDiv.innerText = "ولت متصل شد: " + mockWallet.substring(0,6) + "..." + mockWallet.substring(34);
-                        addrDiv.style.display = 'block';
-                        
-                        // ذخیره آدرس ولت در دیتابیس (اختیاری برای مراحل بعد)
-                        saveWalletToBackend(mockWallet);
+                        // ارسال آدرس واقعی کیف پول به بک‌اِند برای ذخیره در سوپابیس
+                        saveWalletToBackend(rawAddress);
+                    } else {
+                        document.getElementById('wallet-address').innerText = '';
                     }
                 });
-            } else {
-                alert("لطفاً تلگرام خود را به آخرین نسخه آپدیت کنید.");
+            } catch (error) {
+                console.error("خطا در راه‌اندازی تون‌کانکت زنده:", error);
             }
         }
 
+        // ذخیره آدرس ولت در دیتابیس
         async function saveWalletToBackend(walletAddress) {
             try {
                 await fetch(`${BACKEND_URL}/api/wallet`, {
@@ -128,7 +115,7 @@
                     body: JSON.stringify({ telegram_id: TELEGRAM_ID, wallet: walletAddress })
                 });
             } catch (e) {
-                console.error("خطا در ذخیره ولت:", e);
+                console.error("خطا در ذخیره ولت واقعی:", e);
             }
         }
 
@@ -162,7 +149,9 @@
             }
         }
 
+        // لود توابع زمان باز شدن مینی‌اپ
         loadUserData();
+        initTonConnect();
     </script>
 </body>
 </html>
