@@ -1,5 +1,7 @@
 {
   "url": "https://maryoa61.github.io/mybot/",
   "name": "Ton Nexus Quest",
-  "iconUrl": "https://maryoa61.github.io/mybot/icon.png"
+  "iconUrl": "https://maryoa61.github.io/mybot/icon.png",
+  "termsOfUseUrl": "https://maryoa61.github.io/mybot/terms.html",
+  "privacyPolicyUrl": "https://maryoa61.github.io/mybot/privacy.html"
 }
