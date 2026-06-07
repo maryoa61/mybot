@@ -1,92 +1,868 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="en" dir="auto">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ton Nexus Quest</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        body { font-family: sans-serif; background-color: #1c1c1e; color: white; text-align: center; padding: 20px; margin: 0; overflow: hidden; }
-        .container { margin-top: 40px; }
-        .wallet-section { margin-bottom: 30px; min-height: 45px; }
-        .connect-btn { background-color: #0088cc; color: white; border: none; padding: 12px 24px; font-size: 16px; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,136,204,0.4); }
-        .click-btn { width: 160px; height: 160px; border-radius: 50%; border: none; background: radial-gradient(circle, #00aaff, #0077b5); color: white; font-size: 26px; font-weight: bold; cursor: pointer; box-shadow: 0 0 20px rgba(0,170,255,0.5); transition: all 0.1s ease; user-select: none; -webkit-user-select: none; }
-        .click-btn:active { transform: scale(0.92); }
-        .score-board { font-size: 36px; margin-top: 25px; font-weight: bold; }
-        .wallet-info { font-size: 13px; color: #00ebc7; margin-top: 10px; background: #2c2c2e; padding: 8px; border-radius: 8px; display: none; word-break: break-all; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cyber Clicker: Energy Core</title>
+  
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  
+  <!-- TON Connect UI JavaScript CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@tonconnect/ui@2.0.9/dist/tonconnect-ui.min.js"></script>
+
+  <!-- Google Fonts for advanced typography -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;900&family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+  <style>
+    /* Reset & Base variables for Cyber-Dark Neon Style */
+    :root {
+      --bg-dark-purple: #06020f;
+      --bg-royal-blue: #02071d;
+      --bg-charcoal: #090a12;
+      --neon-cyan: #00e5ff;
+      --neon-magenta: #ff007f;
+      --neon-yellow: #ffd700;
+      --glass-bg: rgba(6, 4, 15, 0.65);
+      --glass-border: rgba(255, 0, 127, 0.15);
+      --glass-accent-border: rgba(0, 229, 255, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      background: linear-gradient(135deg, var(--bg-dark-purple), var(--bg-royal-blue), var(--bg-charcoal));
+      background-size: 400% 400%;
+      animation: gradientShift 20s ease infinite;
+      color: #e2e8f0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+    }
+
+    /* Animated background gradient shifting logic */
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Subtle Scanline Overlay */
+    body::before {
+      content: " ";
+      display: block;
+      position: fixed;
+      top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+      z-index: 99;
+      background-size: 100% 3px, 4px 100%;
+      pointer-events: none;
+    }
+
+    /* Header controls style */
+    header {
+      width: 100%;
+      max-width: 480px;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .brand-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      background: linear-gradient(to right, var(--neon-cyan), var(--neon-magenta));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+    }
+
+    .brand-subtitle {
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      font-family: 'Share Tech Mono', monospace;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* Connection status bar helper */
+    .service-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--glass-accent-border);
+      border-radius: 20px;
+      font-size: 0.70rem;
+      font-family: 'Share Tech Mono', monospace;
+      text-transform: uppercase;
+      color: var(--neon-cyan);
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.1);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--neon-cyan);
+      animation: pulseIndicator 1.5s infinite;
+    }
+
+    @keyframes pulseIndicator {
+      0% { opacity: 0.4; }
+      50% { opacity: 1; transform: scale(1.2); }
+      100% { opacity: 0.4; }
+    }
+
+    /* Main Container Details */
+    main {
+      width: 100%;
+      max-width: 480px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 0 20px;
+      gap: 24px;
+      z-index: 10;
+    }
+
+    /* Glassmorphic Metrics Card */
+    .glass-card {
+      width: 100%;
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 16px 20px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      text-align: center;
+      position: relative;
+    }
+
+    /* Identity frame inside layout */
+    .identity-label {
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      font-family: 'Share Tech Mono', monospace;
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 6px;
+    }
+
+    .identity-label span {
+      font-weight: 700;
+    }
+
+    /* Big numeric display clicks */
+    .metrics-score-group {
+      margin: 8px 0;
+    }
+
+    .clicks-label {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      font-family: 'Share Tech Mono', monospace;
+      letter-spacing: 1.5px;
+    }
+
+    .clicks-display {
+      font-size: 3.5rem;
+      font-weight: 900;
+      font-family: 'Orbitron', sans-serif;
+      color: #ffffff;
+      text-shadow: 0 0 15px rgba(255, 255, 255, 0.25), 0 0 3px rgba(0, 229, 255, 0.3);
+      letter-spacing: -1px;
+      line-height: 1;
+      margin-top: 4px;
+    }
+
+    /* Dynamic level & continuous progress bar system */
+    .progress-section {
+      width: 100%;
+      margin: 14px 0 6px 0;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .level-badge {
+      color: var(--neon-magenta);
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .progress-fraction {
+      color: #cbd5e1;
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--neon-magenta), var(--neon-cyan));
+      border-radius: 10px;
+      box-shadow: 0 0 10px var(--neon-magenta);
+      transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    /* Interactive Central Energy Core Button */
+    .core-interactor {
+      position: relative;
+      margin: 12px 0;
+    }
+
+    .energy-ring {
+      position: absolute;
+      inset: -14px;
+      border-radius: 50%;
+      border: 2px dashed rgba(0, 229, 255, 0.25);
+      animation: coreRotate 16s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes coreRotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .btn-energy-core {
+      position: relative;
+      width: 190px;
+      height: 190px;
+      border-radius: 50%;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      background: radial-gradient(circle, #ff007f 10%, #680033 60%, #0d0107 100%);
+      box-shadow: 
+        0 0 15px rgba(255, 0, 127, 0.4),
+        inset 0 0 20px rgba(255, 255, 255, 0.15),
+        inset 0 4px 6px rgba(255, 255, 255, 0.25),
+        inset 0 -8px 12px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.06s ease, box-shadow 0.1s ease;
+      touch-action: manipulation;
+    }
+
+    .btn-energy-core:active {
+      transform: scale(0.94);
+      box-shadow: 
+        0 0 25px rgba(255, 0, 127, 0.6),
+        inset 0 0 30px rgba(255, 255, 255, 0.3),
+        inset 0 -4px 6px rgba(0, 0, 0, 0.6);
+    }
+
+    .inner-glowing-eye {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 229, 255, 0.8) 0%, rgba(20, 2, 70, 0.85) 70%);
+      border: 2px solid rgba(0, 229, 255, 0.3);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-shadow: inset 0 0 12px rgba(0, 229, 255, 0.4);
+    }
+
+    .core-power-icon {
+      font-size: 2.25rem;
+      filter: drop-shadow(0 0 8px #00e5ff);
+      transition: transform 0.2s ease;
+    }
+
+    .btn-energy-core:active .core-power-icon {
+      transform: scale(1.15) rotate(10deg);
+    }
+
+    .core-caption {
+      font-size: 0.65rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-family: 'Share Tech Mono', monospace;
+      color: #00e5ff;
+      margin-top: 4px;
+      opacity: 0.85;
+      text-shadow: 0 0 4px rgba(0, 229, 255, 0.4);
+    }
+
+    /* Floating +1 click animations container */
+    .click-floater {
+      position: absolute;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: var(--neon-cyan);
+      text-shadow: 0 0 8px rgba(0, 229, 255, 0.8), 0 0 2px #000;
+      pointer-events: none;
+      z-index: 100;
+      animation: floatUpFade 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+
+    @keyframes floatUpFade {
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(0.8);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-90px) scale(1.3);
+      }
+    }
+
+    /* TON Button connector framing styling */
+    .wallet-connection-panel {
+      width: 100%;
+      padding: 14px 20px;
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      background: rgba(0, 0, 0, 0.35);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .connect-text {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      font-family: 'Share Tech Mono', monospace;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    /* Styled TON Button Custom Override Holder */
+    .ton-btn-container {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+    }
+
+    /* Switch toggle styles */
+    .switch-toggle {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 22px;
+    }
+    .slider-toggle {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      border-radius: 22px;
+      transition: .3s;
+    }
+    .slider-toggle::before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 2px;
+      background-color: #cbd5e1;
+      border-radius: 50%;
+      transition: .3s;
+    }
+    .switch-toggle input:checked + .slider-toggle {
+      background-color: rgba(0, 229, 255, 0.2);
+      border-color: var(--neon-cyan);
+    }
+    .switch-toggle input:checked + .slider-toggle::before {
+      transform: translateX(22px);
+      background-color: var(--neon-cyan);
+      box-shadow: 0 0 8px var(--neon-cyan);
+    }
+
+    /* Battery Saver low power state modifications */
+    body.battery-saver-ok {
+      --neon-cyan: #00bcd4; /* steady mode blue */
+      animation: none !important;
+      background: #06020f !important;
+    }
+    body.battery-saver-ok .energy-ring {
+      animation: none !important;
+      opacity: 0.15 !important;
+      border-style: solid !important;
+    }
+    body.battery-saver-ok .status-dot {
+      animation: none !important;
+    }
+    body.battery-saver-ok .inner-glowing-eye {
+      box-shadow: none !important;
+    }
+    body.battery-saver-ok .btn-energy-core {
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5) !important;
+    }
+    body.battery-saver-ok .click-floater {
+      animation: none !important;
+      display: none !important;
+    }
+
+    /* Beautiful custom Alert system */
+    .toast-overlay {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      width: calc(100% - 40px);
+      max-width: 440px;
+      background: rgba(10, 5, 25, 0.95);
+      border: 1px solid var(--neon-magenta);
+      border-radius: 12px;
+      padding: 12px 18px;
+      box-shadow: 0 0 15px rgba(255, 0, 127, 0.25);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.85rem;
+      z-index: 200;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .toast-overlay.active {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast-icon {
+      color: var(--neon-magenta);
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+
+    /* Footer styling */
+    footer {
+      width: 100%;
+      max-width: 480px;
+      padding: 18px 20px;
+      text-align: center;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.70rem;
+      color: #475569;
+      letter-spacing: 1px;
+      line-height: 1.4;
+      text-transform: uppercase;
+      z-index: 10;
+    }
+
+    footer a {
+      color: var(--neon-cyan);
+      text-decoration: none;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="wallet-section">
-            <button id="wallet-btn" class="connect-btn" onclick="connectRealWallet()">🔗 اتصال به کیف پول واقعی TON</button>
-            <div id="wallet-address" class="wallet-info"></div>
+
+  <!-- APP CONTROL HEADER -->
+  <header>
+    <div class="brand-group">
+      <span class="brand-title">CYBERCORE</span>
+      <span class="brand-subtitle">Energy Ledger v1.0.1</span>
+    </div>
+    <div class="service-badge" id="host-badge">
+      <div class="status-dot"></div>
+      <span id="host-name-text">SYNC: Render</span>
+    </div>
+  </header>
+
+  <!-- MAIN TELEGRAM APP INTERFACE CONTAINER -->
+  <main>
+    
+    <!-- GLASSMORPHIC STATS CONTAINER -->
+    <div class="glass-card" id="metrics-card">
+      <div class="identity-label" id="user-display">
+        <span>USER: <span id="player-username" style="color: var(--neon-cyan)">@unknown_runner</span></span>
+        <span>UID: <span id="player-id" style="color: #cbd5e1">-</span></span>
+      </div>
+
+      <div class="metrics-score-group">
+        <div class="clicks-label">TOTAL EXTRACTED ENERGY</div>
+        <div class="clicks-display" id="clicks-board">0</div>
+      </div>
+
+      <!-- PROGRESS & LEVEL SYSTEM -->
+      <div class="progress-section">
+        <div class="progress-header">
+          <span class="level-badge" id="level-title">LVL 1: CORE NOVICE</span>
+          <span class="progress-fraction" id="progress-text">0 / 100</span>
         </div>
-        <div class="game-area">
-            <button class="click-btn" onclick="increaseScore()">بزن!</button>
-            <div class="score-board"><span id="score">0</span></div>
+        <div class="progress-bar-container">
+          <div class="progress-fill" id="progress-visual-bar"></div>
         </div>
+      </div>
     </div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready(); tg.expand();
+    <!-- MAIN CENTRAL COIN TAP ELEMENT -->
+    <div class="core-interactor">
+      <!-- Rotating ambient ring -->
+      <div class="energy-ring"></div>
+      
+      <!-- Energy main button -->
+      <button class="btn-energy-core" id="energy-core-cta" aria-label="Tap to capture energy">
+        <div class="inner-glowing-eye">
+          <div class="core-power-icon" id="core-icon">⚡</div>
+          <div class="core-caption">TAP TO CAPTURE</div>
+        </div>
+      </button>
+    </div>
 
-        const BACKEND_URL = 'https://mybot-gx1a.onrender.com';
-        const TELEGRAM_ID = tg.initDataUnsafe?.user?.id || 123456789;
-        const USERNAME = tg.initDataUnsafe?.user?.username || 'Guest';
+    <!-- WALLET STYLING WITH TON CONNECT UI COMPLIANCE -->
+    <div class="wallet-connection-panel">
+      <p class="connect-text">Connect your TON-wallet for Airdrop logs</p>
+      <div class="ton-btn-container" id="ton-connect-btn"></div>
+    </div>
 
-        // اتصال زنده و امن از طریق لینک مستقیم و بومی ربات ولت تلگرام
-        function connectRealWallet() {
-            // ایجاد یک لینک اتصال مستقیم استاندارد برای باز کردن ولت تلگرام بدون واسطه
-            const manifestUri = 'https://maryoa61.github.io/mybot/tonconnect-manifest.json';
-            const walletUrl = `https://t.me/wallet/start?startapp=attach&manifest=${encodeURIComponent(manifestUri)}`;
-            
-            if (tg.openTelegramLink) {
-                tg.openTelegramLink(walletUrl);
-                
-                // نمایش آدرس پس از برگشت کاربر (ساختن آدرس بر اساس الگوریتم ثابت بلاکچین برای تست موفقیت اتصال)
-                setTimeout(() => {
-                    const mockRealAddr = "EQ" + btoa(TELEGRAM_ID + "realton").replace(/=/g, "").substring(0, 36);
-                    document.getElementById('wallet-btn').style.display = 'none';
-                    const infoDiv = document.getElementById('wallet-address');
-                    infoDiv.innerText = `ولّت متصل شد: ${mockRealAddr.substring(0, 6)}...${mockRealAddr.substring(mockRealAddr.length - 4)}`;
-                    infoDiv.style.display = 'block';
-                    saveWalletToBackend(mockRealAddr);
-                }, 3000);
-            } else {
-                window.open(walletUrl, '_blank');
-            }
+    <!-- BATTERY SAVER TOGGLE PANEL -->
+    <div class="wallet-connection-panel" style="margin-top: 12px; border-color: rgba(0, 229, 255, 0.1);">
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <span class="connect-text" style="font-size: 0.75rem; letter-spacing: 0.5px; color: #94a3b8;">🔋 SYSTEM BATTERY SAVER</span>
+        <label class="switch-toggle">
+          <input type="checkbox" id="battery-saver-chk" style="opacity: 0; width: 0; height: 0;">
+          <span class="slider-toggle"></span>
+        </label>
+      </div>
+      <p id="battery-saver-desc" style="font-size: 0.65rem; color: #64748b; font-family: 'Share Tech Mono', monospace; text-align: left; width: 100%; text-transform: uppercase; margin-top: 4px;">
+        STATUS: FULL POWER (60 FPS ANIMATION ACTIVE)
+      </p>
+    </div>
+
+  </main>
+
+  <!-- APP TOAST SYSTEM -->
+  <div class="toast-overlay" id="alert-toast">
+    <div class="toast-icon">⚡ [SYS]:</div>
+    <div id="toast-message">Database initialized successfully. Happy tapping!</div>
+  </div>
+
+  <!-- FOOTER DOCUMENT DATA -->
+  <footer>
+    CONNECTED TO RENDER ENGINE: <a href="https://mybot-gx1a.onrender.com" target="_blank">MYBOT-GX1A</a><br>
+    DEVELOPED ACCORDING TO TELEGRAM SDK PRINCIPLES
+  </footer>
+
+  <!-- CORE CONTROLLER APPLICATION CODE -->
+  <script>
+    // 1. BACKEND ROUTE CONFIGURATION
+    const BACKEND_URL = "https://mybot-gx1a.onrender.com";
+
+    // 2. STATE HANDLERS
+    let userState = {
+      telegram_id: 11112222, // default identifier fallback for external browsers
+      username: "external_core_runner",
+      clicks: 0,
+      wallet: null
+    };
+
+    // 3. INITIALIZE TELEGRAM WEBAPP SDK IF AVAILABLE
+    let tgSdk = null;
+    try {
+      if (window.Telegram && window.Telegram.WebApp) {
+        tgSdk = window.Telegram.WebApp;
+        tgSdk.ready();
+        tgSdk.expand();
+        
+        // Fetch real WebApp User details
+        if (tgSdk.initDataUnsafe && tgSdk.initDataUnsafe.user) {
+          const userObj = tgSdk.initDataUnsafe.user;
+          userState.telegram_id = userObj.id;
+          userState.username = userObj.username || `user_${userObj.id}`;
         }
+      }
+    } catch(err) {
+      console.warn("Telegram WebApp system context undetected, standard simulation active.", err);
+    }
 
-        async function saveWalletToBackend(walletAddress) {
-            try {
-                await fetch(`${BACKEND_URL}/api/wallet`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ telegram_id: TELEGRAM_ID, wallet: walletAddress })
-                });
-            } catch (e) {}
+    // Reflect variables onto DOM UI inputs of Player Info block
+    document.getElementById("player-username").innerText = `@${userState.username}`;
+    document.getElementById("player-id").innerText = userState.telegram_id;
+
+    // Toast manager
+    function displayToast(msg) {
+      const toast = document.getElementById("alert-toast");
+      document.getElementById("toast-message").innerText = msg;
+      
+      toast.classList.add("active");
+      setTimeout(() => {
+        toast.classList.remove("active");
+      }, 3500);
+    }
+
+    // 4. LEVEL SYSTEM LOGIC
+    // Resets or levels up progress every 100 clicks
+    function updateLevelSystem(clicksCount) {
+      const level = Math.floor(clicksCount / 100) + 1;
+      const progressInLevel = clicksCount % 100;
+      
+      // Determine Rank Titles
+      let title = "LVL 1: CORE NOVICE";
+      if (level === 2) title = "LVL 2: MATRIX CHIPS";
+      else if (level === 3) title = "LVL 3: GRID RUNNER";
+      else if (level === 4) title = "LVL 4: SYNAPSE RACER";
+      else if (level >= 5) title = `LVL ${level}: QUANTUM KING`;
+
+      document.getElementById("level-title").innerText = title;
+      document.getElementById("progress-text").innerText = `${progressInLevel} / 100`;
+      document.getElementById("progress-visual-bar").style.width = `${progressInLevel}%`;
+
+      // Change Core graphics periodically
+      const iconSet = ["⚡", "⭐", "🔥", "☄️", "🔮", "🧬"];
+      const activeIconIndex = (level - 1) % iconSet.length;
+      document.getElementById("core-icon").innerText = iconSet[activeIconIndex];
+    }
+
+    // 5. FETCH VISUAL DATA SYNC
+    async function fetchUserData() {
+      try {
+        const queryParams = new URLSearchParams({
+          telegram_id: userState.telegram_id.toString(),
+          username: userState.username
+        });
+
+        const response = await fetch(`${BACKEND_URL}/api/user?${queryParams.toString()}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        
+        const resObj = await response.json();
+        
+        if (resObj && resObj.success && resObj.data) {
+          userState.clicks = resObj.data.clicks || 0;
+          userState.wallet = resObj.data.wallet || null;
+          
+          // Refresh views
+          document.getElementById("clicks-board").innerText = userState.clicks.toLocaleString();
+          updateLevelSystem(userState.clicks);
+          
+          document.getElementById("host-name-text").innerText = "SYNC: Render Online";
+          document.getElementById("host-badge").style.color = "var(--neon-cyan)";
+          document.getElementById("host-badge").style.borderColor = "var(--glass-accent-border)";
         }
+      } catch (err) {
+        console.error("Failed to call user fetch from Render, fallback offline active.", err);
+        displayToast("Connecting with fallback memory DB.");
+        
+        // Restore local UI details
+        document.getElementById("clicks-board").innerText = userState.clicks.toLocaleString();
+        updateLevelSystem(userState.clicks);
+        
+        document.getElementById("host-name-text").innerText = "SYNC: Off-Grid";
+        document.getElementById("host-badge").style.color = "var(--neon-magenta)";
+        document.getElementById("host-badge").style.borderColor = "rgba(255, 0, 127, 0.3)";
+      }
+    }
 
-        async function increaseScore() {
-            const scoreEl = document.getElementById('score');
-            scoreEl.innerText = parseInt(scoreEl.innerText) + 1;
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/click`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ telegram_id: TELEGRAM_ID })
-                });
-                const data = await res.json();
-                if (data.clicks) scoreEl.innerText = data.clicks;
-            } catch (e) {}
+    // Call fetch user on first screen render
+    fetchUserData();
+
+    // 6. COIN ACTION & OPTIMISTIC SCORE UPDATES
+    const coreCta = document.getElementById("energy-core-cta");
+    
+    coreCta.addEventListener("click", async (e) => {
+      // Audio response trigger
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx) {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = "sine";
+          // Create beautiful cyber laser-like pitch slide
+          osc.frequency.setValueAtTime(450, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.12);
+          gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.12);
         }
+      } catch(audioErr) {}
 
-        fetch(`${BACKEND_URL}/api/user?telegram_id=${TELEGRAM_ID}&username=${USERNAME}`)
-            .then(r => r.json()).then(d => {
-                if (d.clicks !== undefined) document.getElementById('score').innerText = d.clicks;
-            }).catch(e => {});
-    </script>
+      // Tactile Web haptics 
+      if (tgSdk && tgSdk.HapticFeedback) {
+        tgSdk.HapticFeedback.impactOccurred("soft");
+      }
+
+      // Generate visual +1 floaters
+      const rect = coreCta.getBoundingClientRect();
+      const clickX = e.clientX || (e.touches && e.touches[0] && e.touches[0].clientX) || (rect.left + rect.width / 2);
+      const clickY = e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY) || (rect.top + rect.height / 2);
+      
+      const relativeX = clickX - rect.left;
+      const relativeY = clickY - rect.top;
+
+      // Spawn floater (skip if battery saver stylesheet class is toggled)
+      if (!document.body.classList.contains("battery-saver-ok")) {
+        const floater = document.createElement("span");
+        floater.className = "click-floater";
+        floater.innerText = "+1";
+        floater.style.left = `${relativeX}px`;
+        floater.style.top = `${relativeY}px`;
+        
+        coreCta.appendChild(floater);
+        setTimeout(() => {
+          floater.remove();
+        }, 800);
+      }
+
+      // OPTIMISTIC UPDATE: instant local upgrade
+      userState.clicks += 1;
+      document.getElementById("clicks-board").innerText = userState.clicks.toLocaleString();
+      updateLevelSystem(userState.clicks);
+
+      // Backend sync
+      try {
+        const syncResponse = await fetch(`${BACKEND_URL}/api/click`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ telegram_id: userState.telegram_id })
+        });
+        
+        if (syncResponse.ok) {
+          const syncData = await syncResponse.json();
+          if (syncData && syncData.clicks !== undefined) {
+            userState.clicks = syncData.clicks;
+            document.getElementById("clicks-board").innerText = userState.clicks.toLocaleString();
+            updateLevelSystem(userState.clicks);
+          }
+        }
+      } catch (syncErr) {
+        console.warn("Optimistic click post error:", syncErr);
+      }
+    });
+
+    // 7. TON CONNECT WALLET INITIALIZATION
+    let tonConnectUIInstance = null;
+    try {
+      const TonUIConstructor = window.TonConnectUI || (window.TON_CONNECT_UI && window.TON_CONNECT_UI.TonConnectUI);
+      
+      if (TonUIConstructor) {
+        tonConnectUIInstance = new TonUIConstructor({
+          manifestUrl: "https://maryoa61.github.io/mybot/tonconnect-manifest.json",
+          buttonRootId: "ton-connect-btn"
+        });
+
+        tonConnectUIInstance.onStatusChange(async (wallet) => {
+          if (wallet && wallet.account) {
+            const rawAddress = wallet.account.address;
+            const friendlyAddress = rawAddress.slice(0, 6) + "..." + rawAddress.slice(-4);
+            displayToast(`Connected TON Core: ${friendlyAddress}`);
+            await saveWalletToBackend(rawAddress);
+          } else {
+            userState.wallet = null;
+            displayToast("Wallet disconnected.");
+          }
+        });
+      } else {
+        console.error("TonConnectUI constructor not loaded by window objects.");
+      }
+    } catch (tonError) {
+      console.error("TON Connect initialize failed", tonError);
+    }
+
+    // 8. SYSTEM BATTERY SAVER CONTROLS
+    const batterySaverChk = document.getElementById("battery-saver-chk");
+    const batterySaverDesc = document.getElementById("battery-saver-desc");
+
+    if (batterySaverChk) {
+      batterySaverChk.addEventListener("change", (e) => {
+        try {
+          if (tgSdk && tgSdk.HapticFeedback) {
+            tgSdk.HapticFeedback.impactOccurred("light");
+          }
+        } catch (hep) {}
+
+        if (e.target.checked) {
+          document.body.classList.add("battery-saver-ok");
+          if (batterySaverDesc) {
+            batterySaverDesc.innerText = "STATUS: BATTERY SAVER ACTIVE (LOW POWER, STATIC BG)";
+            batterySaverDesc.style.color = "var(--neon-cyan)";
+          }
+          displayToast("Battery Saver active: Non-essential animations paused.");
+        } else {
+          document.body.classList.remove("battery-saver-ok");
+          if (batterySaverDesc) {
+            batterySaverDesc.innerText = "STATUS: FULL POWER (60 FPS ANIMATION ACTIVE)";
+            batterySaverDesc.style.color = "#64748b";
+          }
+          displayToast("Battery Saver disabled: Fluid graphics restored.");
+        }
+      });
+    }
+
+    // Helper POST logic to save bound address to Supabase
+    async function saveWalletToBackend(rawAddress) {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/wallet`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            telegram_id: userState.telegram_id,
+            wallet: rawAddress
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          displayToast("Wallet registered on Ledger!");
+          userState.wallet = rawAddress;
+        } else {
+          console.warn("Endpoint execution rejected wallet binding status.");
+        }
+      } catch (err) {
+        console.error("Failed to post wallet connection details to backend:", err);
+      }
+    }
+  </script>
 </body>
-</html>
+    </html>
