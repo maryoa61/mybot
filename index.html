@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ton Nexus Quest</title>
-    <!-- بارگذاری اسکریپت رسمی تلگرام -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tonconnect/ui@2.0.9/dist/tonconnect-ui.min.js"></script>
     <style>
         body {
             font-family: sans-serif;
@@ -17,6 +17,11 @@
         }
         .container {
             margin-top: 50px;
+        }
+        #ton-connect-btn {
+            display: inline-block;
+            margin-bottom: 30px;
+            min-height: 40px;
         }
         .click-btn {
             width: 150px;
@@ -31,6 +36,7 @@
             box-shadow: 0 8px 15px rgba(0,136,204,0.4);
             user-select: none;
             -webkit-user-select: none;
+            transition: transform 0.1s ease;
         }
         .click-btn:active {
             transform: scale(0.95);
@@ -44,6 +50,8 @@
 <body>
 
     <div class="container">
+        <div id="ton-connect-btn"></div>
+
         <div class="game-area">
             <button class="click-btn" onclick="increaseScore()">بزن!</button>
             <div class="score-board">امتیاز: <span id="score">0</span></div>
@@ -51,7 +59,7 @@
     </div>
 
     <script>
-        // دریافت اطلاعات واقعی کاربر از وب‌اپ تلگرام
+        // ۱. راه‌اندازی وب‌اپ تلگرام
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
@@ -62,7 +70,22 @@
         const TELEGRAM_ID = user ? user.id : 123456789;
         const USERNAME = user ? (user.username || user.first_name) : 'Guest';
 
-        // دریافت امتیاز اولیه کاربر از دیتابیس
+        // ۲. راه‌اندازی هوشمند دکمه اتصال ولت (تست در یک بلاک امن برای جلوگیری از کرش)
+        let tonConnectUI;
+        try {
+            if (typeof TONConnectUI !== 'undefined') {
+                tonConnectUI = new TONConnectUI.TonConnectUI({
+                    manifestUrl: 'https://maryoa61.github.io/mybot/tonconnect-manifest.json',
+                    buttonRootId: 'ton-connect-btn'
+                });
+            } else {
+                console.warn("کتابخانه تون‌کانکت لود نشد، اما بازی بدون مشکل اجرا می‌شود.");
+            }
+        } catch (e) {
+            console.error("خطا در ساخت دکمه ولت:", e);
+        }
+
+        // ۳. دریافت امتیاز اولیه کاربر از دیتابیس
         async function loadUserData() {
             try {
                 const response = await fetch(`${BACKEND_URL}/api/user?telegram_id=${TELEGRAM_ID}&username=${USERNAME}`);
@@ -75,7 +98,7 @@
             }
         }
 
-        // تابع ثبت کلیک و افزایش امتیاز
+        // ۴. تابع ثبت کلیک و افزایش امتیاز
         async function increaseScore() {
             try {
                 const response = await fetch(`${BACKEND_URL}/api/click`, {
@@ -97,7 +120,7 @@
             }
         }
 
-        // اجرای تابع لود اولیه هنگام باز شدن صفحه
+        // اجرای تابع لود اولیه
         loadUserData();
     </script>
 </body>
