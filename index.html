@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ton Nexus Quest</title>
-    <!-- بارگذاری اسکریپت رسمی تلگرام و اتصالات پایدار تون -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tonconnect-ui/2.0.9/tonconnect-ui.min.js"></script>
     <style>
@@ -49,7 +48,6 @@
 <body>
 
     <div class="container">
-        <!-- دکمه اتصال به ولت تون -->
         <div id="ton-connect-btn"></div>
 
         <div class="game-area">
@@ -64,7 +62,8 @@
         tg.ready();
         tg.expand(); // باز کردن مینی‌اپ به صورت تمام صفحه
 
-        const BACKEND_URL = 'https://mybot-gx1a.onrender.com';
+        // اضافه کردن v=2 برای دور زدن سیستم کش سرسخت تلگرام
+        const BACKEND_URL = 'https://mybot-gx1a.onrender.com?v=2';
         
         // استخراج اطلاعات کاربر تلگرام (اگر در مرورگر عادی باشد از دیتای تستی استفاده می‌کند)
         const user = tg.initDataUnsafe?.user;
@@ -80,7 +79,7 @@
         // دریافت امتیاز اولیه کاربر از دیتابیس
         async function loadUserData() {
             try {
-                const response = await fetch(`${BACKEND_URL}/api/user?telegram_id=${TELEGRAM_ID}&username=${USERNAME}`);
+                const response = await fetch(`${BACKEND_URL.split('?')[0]}/api/user?telegram_id=${TELEGRAM_ID}&username=${USERNAME}`);
                 const data = await response.json();
                 if (data && data.clicks !== undefined) {
                     document.getElementById('score').innerText = data.clicks;
@@ -93,7 +92,7 @@
         // تابع ثبت کلیک و افزایش امتیاز
         async function increaseScore() {
             try {
-                const response = await fetch(`${BACKEND_URL}/api/click`, {
+                const response = await fetch(`${BACKEND_URL.split('?')[0]}/api/click`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
