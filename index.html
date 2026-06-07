@@ -1,868 +1,883 @@
 <!DOCTYPE html>
-<html lang="en" dir="auto">
+<html lang="fa" dir="auto">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Cyber Clicker: Energy Core</title>
-  
-  <!-- Telegram WebApp SDK -->
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  
-  <!-- TON Connect UI JavaScript CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@tonconnect/ui@2.0.9/dist/tonconnect-ui.min.js"></script>
+  <title>CyberCore: Energy Nexus</title>
 
-  <!-- Google Fonts for advanced typography -->
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;900&family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tonconnect/ui@2.0.9/dist/tonconnect-ui.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 
   <style>
-    /* Reset & Base variables for Cyber-Dark Neon Style */
+    /* ─── Tokens ─────────────────────────────────────────── */
     :root {
-      --bg-dark-purple: #06020f;
-      --bg-royal-blue: #02071d;
-      --bg-charcoal: #090a12;
-      --neon-cyan: #00e5ff;
-      --neon-magenta: #ff007f;
-      --neon-yellow: #ffd700;
-      --glass-bg: rgba(6, 4, 15, 0.65);
-      --glass-border: rgba(255, 0, 127, 0.15);
-      --glass-accent-border: rgba(0, 229, 255, 0.2);
+      --c-bg:       #03010a;
+      --c-surface:  #0a0714;
+      --c-border:   rgba(120,80,255,.18);
+      --c-border2:  rgba(0,240,200,.12);
+      --c-primary:  #7c3aff;
+      --c-accent:   #00f0c8;
+      --c-danger:   #ff2d6e;
+      --c-text:     #ddd6fe;
+      --c-muted:    #6b6880;
+      --c-glow-p:   rgba(124,58,255,.45);
+      --c-glow-a:   rgba(0,240,200,.35);
+      --c-glow-d:   rgba(255,45,110,.4);
+      --r-card:     20px;
+      --font-title: 'Oxanium', sans-serif;
+      --font-mono:  'Space Mono', monospace;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+    /* ─── Reset ──────────────────────────────────────────── */
+    *, *::before, *::after {
+      box-sizing: border-box; margin: 0; padding: 0;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
     }
 
+    /* ─── Body ───────────────────────────────────────────── */
     body {
-      font-family: 'Rajdhani', sans-serif;
-      background: linear-gradient(135deg, var(--bg-dark-purple), var(--bg-royal-blue), var(--bg-charcoal));
-      background-size: 400% 400%;
-      animation: gradientShift 20s ease infinite;
-      color: #e2e8f0;
+      font-family: var(--font-title);
+      background: var(--c-bg);
+      color: var(--c-text);
       min-height: 100vh;
-      overflow-x: hidden;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
       align-items: center;
+      overflow-x: hidden;
       position: relative;
     }
 
-    /* Animated background gradient shifting logic */
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
-    /* Subtle Scanline Overlay */
+    /* ─── Background grid ────────────────────────────────── */
     body::before {
-      content: " ";
-      display: block;
-      position: fixed;
-      top: 0; left: 0; bottom: 0; right: 0;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-      z-index: 99;
-      background-size: 100% 3px, 4px 100%;
-      pointer-events: none;
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(124,58,255,.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,58,255,.06) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none; z-index: 0;
     }
 
-    /* Header controls style */
+    /* Scan-line overlay */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,.15) 2px,
+        rgba(0,0,0,.15) 4px
+      );
+      pointer-events: none; z-index: 1;
+    }
+
+    /* ─── Noise canvas ───────────────────────────────────── */
+    #noise-layer {
+      position: fixed; inset: 0;
+      opacity: .035;
+      pointer-events: none; z-index: 2;
+    }
+
+    /* ─── Ambient orbs ───────────────────────────────────── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none; z-index: 0;
+    }
+    .orb-1 { width:340px; height:340px; top:-80px; left:-80px;  background: var(--c-glow-p); opacity:.4; animation: orbDrift1 18s ease-in-out infinite alternate; }
+    .orb-2 { width:280px; height:280px; bottom:60px; right:-60px; background: var(--c-glow-a); opacity:.3; animation: orbDrift2 22s ease-in-out infinite alternate; }
+    .orb-3 { width:200px; height:200px; top:50%; left:50%; transform:translate(-50%,-50%); background: var(--c-glow-d); opacity:.15; animation: orbDrift3 14s ease-in-out infinite alternate; }
+
+    @keyframes orbDrift1 { from{transform:translate(0,0)} to{transform:translate(40px,30px)} }
+    @keyframes orbDrift2 { from{transform:translate(0,0)} to{transform:translate(-30px,-40px)} }
+    @keyframes orbDrift3 { from{transform:translate(-50%,-50%) scale(1)} to{transform:translate(-50%,-50%) scale(1.3)} }
+
+    /* ─── Layout wrapper ─────────────────────────────────── */
+    .app-wrapper {
+      position: relative; z-index: 10;
+      width: 100%; max-width: 480px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 16px 24px;
+      gap: 16px;
+    }
+
+    /* ─── Header ─────────────────────────────────────────── */
     header {
       width: 100%;
-      max-width: 480px;
-      padding: 16px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      z-index: 10;
+      padding: 16px 4px 8px;
     }
 
-    .brand-group {
-      display: flex;
-      flex-direction: column;
+    .brand { display:flex; flex-direction:column; gap:2px; }
+    .brand-name {
+      font-size: 1.3rem; font-weight: 800; letter-spacing: 2px;
+      background: linear-gradient(120deg, var(--c-primary) 0%, var(--c-accent) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .brand-ver {
+      font-family: var(--font-mono);
+      font-size: .62rem; color: var(--c-muted);
+      letter-spacing: 2px; text-transform: uppercase;
     }
 
-    .brand-title {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 1.25rem;
-      font-weight: 900;
-      letter-spacing: 1.5px;
-      background: linear-gradient(to right, var(--neon-cyan), var(--neon-magenta));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+    .status-pill {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 12px;
+      background: rgba(0,240,200,.06);
+      border: 1px solid var(--c-border2);
+      border-radius: 50px;
+      font-family: var(--font-mono); font-size: .62rem;
+      color: var(--c-accent); text-transform: uppercase;
+    }
+    .pulse-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--c-accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100%{ opacity:.3; transform:scale(.8) }
+      50%    { opacity:1;   transform:scale(1.2) }
     }
 
-    .brand-subtitle {
-      font-size: 0.75rem;
-      letter-spacing: 1px;
-      color: #94a3b8;
-      font-family: 'Share Tech Mono', monospace;
-      text-transform: uppercase;
-      margin-top: 2px;
-    }
-
-    /* Connection status bar helper */
-    .service-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px solid var(--glass-accent-border);
-      border-radius: 20px;
-      font-size: 0.70rem;
-      font-family: 'Share Tech Mono', monospace;
-      text-transform: uppercase;
-      color: var(--neon-cyan);
-      box-shadow: 0 0 10px rgba(0, 229, 255, 0.1);
-    }
-
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background-color: var(--neon-cyan);
-      animation: pulseIndicator 1.5s infinite;
-    }
-
-    @keyframes pulseIndicator {
-      0% { opacity: 0.4; }
-      50% { opacity: 1; transform: scale(1.2); }
-      100% { opacity: 0.4; }
-    }
-
-    /* Main Container Details */
-    main {
+    /* ─── Glass card ─────────────────────────────────────── */
+    .card {
       width: 100%;
-      max-width: 480px;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 0 20px;
-      gap: 24px;
-      z-index: 10;
+      background: rgba(10,7,20,.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-card);
+      padding: 16px 18px;
+      position: relative; overflow: hidden;
     }
-
-    /* Glassmorphic Metrics Card */
-    .glass-card {
-      width: 100%;
-      background: var(--glass-bg);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--glass-border);
-      border-radius: 24px;
-      padding: 16px 20px;
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-      text-align: center;
-      position: relative;
-    }
-
-    /* Identity frame inside layout */
-    .identity-label {
-      font-size: 0.8rem;
-      letter-spacing: 1px;
-      color: #94a3b8;
-      text-transform: uppercase;
-      font-family: 'Share Tech Mono', monospace;
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 8px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      padding-bottom: 6px;
-    }
-
-    .identity-label span {
-      font-weight: 700;
-    }
-
-    /* Big numeric display clicks */
-    .metrics-score-group {
-      margin: 8px 0;
-    }
-
-    .clicks-label {
-      font-size: 0.75rem;
-      color: #94a3b8;
-      text-transform: uppercase;
-      font-family: 'Share Tech Mono', monospace;
-      letter-spacing: 1.5px;
-    }
-
-    .clicks-display {
-      font-size: 3.5rem;
-      font-weight: 900;
-      font-family: 'Orbitron', sans-serif;
-      color: #ffffff;
-      text-shadow: 0 0 15px rgba(255, 255, 255, 0.25), 0 0 3px rgba(0, 229, 255, 0.3);
-      letter-spacing: -1px;
-      line-height: 1;
-      margin-top: 4px;
-    }
-
-    /* Dynamic level & continuous progress bar system */
-    .progress-section {
-      width: 100%;
-      margin: 14px 0 6px 0;
-    }
-
-    .progress-header {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.8rem;
-      font-weight: bold;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-      letter-spacing: 0.5px;
-    }
-
-    .level-badge {
-      color: var(--neon-magenta);
-      font-family: 'Orbitron', sans-serif;
-    }
-
-    .progress-fraction {
-      color: #cbd5e1;
-      font-family: 'Share Tech Mono', monospace;
-    }
-
-    .progress-bar-container {
-      width: 100%;
-      height: 8px;
-      background: rgba(255, 255, 255, 0.06);
-      border-radius: 10px;
-      overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.03);
-    }
-
-    .progress-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, var(--neon-magenta), var(--neon-cyan));
-      border-radius: 10px;
-      box-shadow: 0 0 10px var(--neon-magenta);
-      transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-    }
-
-    /* Interactive Central Energy Core Button */
-    .core-interactor {
-      position: relative;
-      margin: 12px 0;
-    }
-
-    .energy-ring {
-      position: absolute;
-      inset: -14px;
-      border-radius: 50%;
-      border: 2px dashed rgba(0, 229, 255, 0.25);
-      animation: coreRotate 16s linear infinite;
+    .card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(124,58,255,.05) 0%, transparent 60%);
       pointer-events: none;
     }
 
-    @keyframes coreRotate {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    /* ─── Identity row ───────────────────────────────────── */
+    .identity-row {
+      display: flex; justify-content: space-between; align-items: center;
+      font-family: var(--font-mono); font-size: .68rem;
+      color: var(--c-muted);
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      padding-bottom: 10px; margin-bottom: 12px;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    .identity-row .id-val { color: var(--c-text); }
+    .identity-row .user-val { color: var(--c-accent); }
+
+    /* ─── Score block ────────────────────────────────────── */
+    .score-label {
+      font-family: var(--font-mono); font-size: .65rem;
+      color: var(--c-muted); letter-spacing: 2px; text-transform: uppercase;
+    }
+    .score-value {
+      font-size: 3.2rem; font-weight: 800;
+      color: #fff; line-height: 1.05;
+      letter-spacing: -1px;
+      text-shadow: 0 0 20px rgba(124,58,255,.5), 0 0 40px rgba(124,58,255,.2);
+      transition: color .1s;
+    }
+    .score-value.flash { color: var(--c-accent); }
+
+    .score-meta {
+      display: flex; gap: 16px; margin-top: 6px;
+    }
+    .stat-chip {
+      font-family: var(--font-mono); font-size: .65rem;
+      color: var(--c-muted); display: flex; align-items: center; gap: 4px;
+    }
+    .stat-chip span { color: var(--c-text); font-size: .7rem; }
+
+    /* ─── Level system ───────────────────────────────────── */
+    .level-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-top: 14px; margin-bottom: 6px;
+    }
+    .level-name {
+      font-size: .8rem; font-weight: 600; letter-spacing: .5px;
+      color: var(--c-danger);
+      text-shadow: 0 0 8px var(--c-glow-d);
+    }
+    .level-frac {
+      font-family: var(--font-mono); font-size: .65rem; color: var(--c-muted);
     }
 
-    .btn-energy-core {
+    .xp-track {
+      width: 100%; height: 6px;
+      background: rgba(255,255,255,.05);
+      border-radius: 99px; overflow: hidden;
+      border: 1px solid rgba(255,255,255,.04);
+    }
+    .xp-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--c-primary), var(--c-accent));
+      border-radius: 99px;
+      box-shadow: 0 0 8px var(--c-glow-p);
+      transition: width .35s cubic-bezier(.22,1,.36,1);
+    }
+
+    /* Rank badges (milestone display) */
+    .rank-strip {
+      display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap;
+    }
+    .rank-pip {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-family: var(--font-mono); font-size: .58rem;
+      letter-spacing: 1px; text-transform: uppercase;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.07);
+      color: var(--c-muted);
+      transition: all .3s;
+    }
+    .rank-pip.unlocked {
+      background: rgba(124,58,255,.15);
+      border-color: var(--c-primary);
+      color: #c4b5fd;
+      box-shadow: 0 0 6px rgba(124,58,255,.3);
+    }
+    .rank-pip.current {
+      background: rgba(255,45,110,.15);
+      border-color: var(--c-danger);
+      color: #fda4b8;
+      box-shadow: 0 0 8px var(--c-glow-d);
+    }
+
+    /* ─── Core button area ───────────────────────────────── */
+    .core-area {
       position: relative;
-      width: 190px;
-      height: 190px;
-      border-radius: 50%;
-      border: none;
-      outline: none;
-      cursor: pointer;
-      background: radial-gradient(circle, #ff007f 10%, #680033 60%, #0d0107 100%);
-      box-shadow: 
-        0 0 15px rgba(255, 0, 127, 0.4),
-        inset 0 0 20px rgba(255, 255, 255, 0.15),
-        inset 0 4px 6px rgba(255, 255, 255, 0.25),
-        inset 0 -8px 12px rgba(0, 0, 0, 0.5);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      transition: transform 0.06s ease, box-shadow 0.1s ease;
+      display: flex; align-items: center; justify-content: center;
+      width: 240px; height: 240px;
+      margin: 4px 0;
+    }
+
+    /* Rotating rings */
+    .ring {
+      position: absolute; border-radius: 50%;
+      pointer-events: none;
+    }
+    .ring-1 {
+      inset: -12px;
+      border: 1.5px dashed rgba(0,240,200,.2);
+      animation: spin 20s linear infinite;
+    }
+    .ring-2 {
+      inset: -28px;
+      border: 1px dashed rgba(124,58,255,.15);
+      animation: spin 32s linear infinite reverse;
+    }
+    .ring-3 {
+      inset: -46px;
+      border: 1px solid transparent;
+      border-top-color: rgba(255,45,110,.2);
+      border-right-color: rgba(255,45,110,.1);
+      animation: spin 12s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Corner tick marks on ring-2 */
+    .ring-tick {
+      position: absolute;
+      width: 4px; height: 4px; border-radius: 50%;
+      background: var(--c-primary);
+      box-shadow: 0 0 6px var(--c-primary);
+      pointer-events: none;
+    }
+
+    /* Main button */
+    .core-btn {
+      position: relative;
+      width: 200px; height: 200px;
+      border-radius: 50%; border: none; outline: none; cursor: pointer;
+      background: radial-gradient(circle at 35% 35%,
+        #5b21b6 0%, #3b0764 45%, #0d0118 100%);
+      box-shadow:
+        0 0 0 1px rgba(124,58,255,.3),
+        0 0 20px rgba(124,58,255,.35),
+        0 0 60px rgba(124,58,255,.12),
+        inset 0 0 30px rgba(0,0,0,.5),
+        inset 0 2px 4px rgba(255,255,255,.12);
+      display: flex; align-items: center; justify-content: center;
+      transition: transform .07s ease, box-shadow .1s ease;
       touch-action: manipulation;
     }
 
-    .btn-energy-core:active {
-      transform: scale(0.94);
-      box-shadow: 
-        0 0 25px rgba(255, 0, 127, 0.6),
-        inset 0 0 30px rgba(255, 255, 255, 0.3),
-        inset 0 -4px 6px rgba(0, 0, 0, 0.6);
+    .core-btn:active {
+      transform: scale(.93);
+      box-shadow:
+        0 0 0 1px rgba(124,58,255,.5),
+        0 0 30px rgba(124,58,255,.6),
+        0 0 80px rgba(124,58,255,.2),
+        inset 0 0 30px rgba(0,0,0,.5),
+        inset 0 2px 4px rgba(255,255,255,.12);
     }
 
-    .inner-glowing-eye {
-      width: 140px;
-      height: 140px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(0, 229, 255, 0.8) 0%, rgba(20, 2, 70, 0.85) 70%);
-      border: 2px solid rgba(0, 229, 255, 0.3);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      box-shadow: inset 0 0 12px rgba(0, 229, 255, 0.4);
+    .core-inner {
+      width: 148px; height: 148px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,240,200,.55) 0%, rgba(30,5,80,.9) 65%);
+      border: 1.5px solid rgba(0,240,200,.25);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 4px;
+      box-shadow: inset 0 0 20px rgba(0,240,200,.1);
     }
 
-    .core-power-icon {
-      font-size: 2.25rem;
-      filter: drop-shadow(0 0 8px #00e5ff);
-      transition: transform 0.2s ease;
+    .core-icon {
+      font-size: 2.4rem;
+      filter: drop-shadow(0 0 10px var(--c-accent));
+      transition: transform .15s ease;
     }
-
-    .btn-energy-core:active .core-power-icon {
-      transform: scale(1.15) rotate(10deg);
-    }
+    .core-btn:active .core-icon { transform: scale(1.2) rotate(-10deg); }
 
     .core-caption {
-      font-size: 0.65rem;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      font-family: 'Share Tech Mono', monospace;
-      color: #00e5ff;
-      margin-top: 4px;
-      opacity: 0.85;
-      text-shadow: 0 0 4px rgba(0, 229, 255, 0.4);
+      font-family: var(--font-mono); font-size: .58rem;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--c-accent);
     }
 
-    /* Floating +1 click animations container */
-    .click-floater {
+    /* Ripple effect on click */
+    .ripple {
       position: absolute;
-      font-family: 'Orbitron', sans-serif;
-      font-size: 1.6rem;
-      font-weight: 900;
-      color: var(--neon-cyan);
-      text-shadow: 0 0 8px rgba(0, 229, 255, 0.8), 0 0 2px #000;
-      pointer-events: none;
-      z-index: 100;
-      animation: floatUpFade 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-    }
-
-    @keyframes floatUpFade {
-      0% {
-        opacity: 1;
-        transform: translateY(0) scale(0.8);
-      }
-      100% {
-        opacity: 0;
-        transform: translateY(-90px) scale(1.3);
-      }
-    }
-
-    /* TON Button connector framing styling */
-    .wallet-connection-panel {
-      width: 100%;
-      padding: 14px 20px;
-      border: 1px solid var(--glass-border);
-      border-radius: 20px;
-      background: rgba(0, 0, 0, 0.35);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .connect-text {
-      font-size: 0.8rem;
-      color: #94a3b8;
-      font-family: 'Share Tech Mono', monospace;
-      text-align: center;
-      text-transform: uppercase;
-    }
-
-    /* Styled TON Button Custom Override Holder */
-    .ton-btn-container {
-      display: flex;
-      justify-content: center;
-      width: 100%;
-    }
-
-    /* Switch toggle styles */
-    .switch-toggle {
-      position: relative;
-      display: inline-block;
-      width: 44px;
-      height: 22px;
-    }
-    .slider-toggle {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(0, 229, 255, 0.3);
-      border-radius: 22px;
-      transition: .3s;
-    }
-    .slider-toggle::before {
-      position: absolute;
-      content: "";
-      height: 14px;
-      width: 14px;
-      left: 3px;
-      bottom: 2px;
-      background-color: #cbd5e1;
       border-radius: 50%;
-      transition: .3s;
+      border: 2px solid var(--c-accent);
+      pointer-events: none;
+      animation: rippleOut .6s ease-out forwards;
     }
-    .switch-toggle input:checked + .slider-toggle {
-      background-color: rgba(0, 229, 255, 0.2);
-      border-color: var(--neon-cyan);
-    }
-    .switch-toggle input:checked + .slider-toggle::before {
-      transform: translateX(22px);
-      background-color: var(--neon-cyan);
-      box-shadow: 0 0 8px var(--neon-cyan);
+    @keyframes rippleOut {
+      from { width:20px; height:20px; opacity:.8; transform:translate(-50%,-50%) scale(1); }
+      to   { width:200px; height:200px; opacity:0; transform:translate(-50%,-50%) scale(1); }
     }
 
-    /* Battery Saver low power state modifications */
-    body.battery-saver-ok {
-      --neon-cyan: #00bcd4; /* steady mode blue */
-      animation: none !important;
-      background: #06020f !important;
+    /* Float label */
+    .floater {
+      position: absolute;
+      font-family: var(--font-title); font-size: 1.5rem; font-weight: 800;
+      color: var(--c-accent);
+      text-shadow: 0 0 10px var(--c-glow-a);
+      pointer-events: none; z-index: 50;
+      animation: floatUp .75s cubic-bezier(.22,1,.36,1) forwards;
     }
-    body.battery-saver-ok .energy-ring {
-      animation: none !important;
-      opacity: 0.15 !important;
-      border-style: solid !important;
-    }
-    body.battery-saver-ok .status-dot {
-      animation: none !important;
-    }
-    body.battery-saver-ok .inner-glowing-eye {
-      box-shadow: none !important;
-    }
-    body.battery-saver-ok .btn-energy-core {
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5) !important;
-    }
-    body.battery-saver-ok .click-floater {
-      animation: none !important;
-      display: none !important;
+    @keyframes floatUp {
+      0%   { opacity:1; transform:translateY(0) scale(.8); }
+      100% { opacity:0; transform:translateY(-80px) scale(1.2); }
     }
 
-    /* Beautiful custom Alert system */
-    .toast-overlay {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      width: calc(100% - 40px);
-      max-width: 440px;
-      background: rgba(10, 5, 25, 0.95);
-      border: 1px solid var(--neon-magenta);
-      border-radius: 12px;
-      padding: 12px 18px;
-      box-shadow: 0 0 15px rgba(255, 0, 127, 0.25);
-      color: #ffffff;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 0.85rem;
-      z-index: 200;
-      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    .toast-overlay.active {
-      transform: translateX(-50%) translateY(0);
-    }
-
-    .toast-icon {
-      color: var(--neon-magenta);
-      font-size: 1.1rem;
-      font-weight: bold;
-    }
-
-    /* Footer styling */
-    footer {
+    /* ─── Milestones strip ───────────────────────────────── */
+    .milestones-card {
       width: 100%;
-      max-width: 480px;
-      padding: 18px 20px;
-      text-align: center;
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 0.70rem;
-      color: #475569;
-      letter-spacing: 1px;
-      line-height: 1.4;
-      text-transform: uppercase;
-      z-index: 10;
     }
+    .section-label {
+      font-family: var(--font-mono); font-size: .62rem;
+      color: var(--c-muted); letter-spacing: 2px;
+      text-transform: uppercase; margin-bottom: 10px;
+    }
+    .milestone-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    }
+    .milestone-item {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 4px; padding: 10px 6px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 12px;
+      font-family: var(--font-mono); font-size: .6rem;
+      color: var(--c-muted); text-align: center; letter-spacing: .5px;
+      transition: all .3s;
+    }
+    .milestone-item.done {
+      background: rgba(124,58,255,.1);
+      border-color: rgba(124,58,255,.3);
+      color: #c4b5fd;
+    }
+    .milestone-item.done .m-icon { filter: none; }
+    .m-icon {
+      font-size: 1.3rem;
+      filter: grayscale(1) opacity(.4);
+      transition: filter .3s;
+    }
+    .milestone-item.done .m-icon { filter: drop-shadow(0 0 6px var(--c-primary)); }
+    .m-req { font-size: .58rem; color: var(--c-muted); }
 
-    footer a {
-      color: var(--neon-cyan);
-      text-decoration: none;
+    /* ─── Wallet panel ───────────────────────────────────── */
+    .wallet-card {
+      width: 100%;
     }
+    .wallet-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+    }
+    .wallet-info { display:flex; flex-direction:column; gap:3px; }
+    .wallet-title {
+      font-size: .85rem; font-weight: 600; color: var(--c-text);
+    }
+    .wallet-desc {
+      font-family: var(--font-mono); font-size: .6rem;
+      color: var(--c-muted); text-transform: uppercase; letter-spacing: 1px;
+    }
+    #ton-connect-btn { flex-shrink: 0; }
+
+    /* ─── Toast ──────────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 20px; left: 50%;
+      transform: translateX(-50%) translateY(120px);
+      width: calc(100% - 32px); max-width: 440px;
+      background: rgba(6,2,18,.95);
+      border: 1px solid var(--c-danger);
+      border-radius: 14px;
+      padding: 11px 16px;
+      box-shadow: 0 0 20px rgba(255,45,110,.2);
+      display: flex; align-items: center; gap: 10px;
+      font-size: .82rem;
+      z-index: 500;
+      transition: transform .35s cubic-bezier(.175,.885,.32,1.275);
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast-ico { color: var(--c-danger); font-size: .9rem; }
+
+    /* ─── Footer ─────────────────────────────────────────── */
+    footer {
+      font-family: var(--font-mono); font-size: .6rem;
+      color: var(--c-muted); text-align: center;
+      letter-spacing: 1px; text-transform: uppercase;
+      padding: 4px 0 8px;
+    }
+    footer a { color: var(--c-accent); text-decoration: none; }
+
+    /* ─── Level up flash ─────────────────────────────────── */
+    .levelup-flash {
+      position: fixed; inset: 0; z-index: 300;
+      background: radial-gradient(circle, rgba(124,58,255,.3) 0%, transparent 70%);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .1s;
+    }
+    .levelup-flash.show { opacity: 1; }
   </style>
 </head>
 <body>
 
-  <!-- APP CONTROL HEADER -->
-  <header>
-    <div class="brand-group">
-      <span class="brand-title">CYBERCORE</span>
-      <span class="brand-subtitle">Energy Ledger v1.0.1</span>
-    </div>
-    <div class="service-badge" id="host-badge">
-      <div class="status-dot"></div>
-      <span id="host-name-text">SYNC: Render</span>
-    </div>
-  </header>
+  <!-- Ambient -->
+  <canvas id="noise-layer"></canvas>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  <div class="levelup-flash" id="levelup-flash"></div>
 
-  <!-- MAIN TELEGRAM APP INTERFACE CONTAINER -->
-  <main>
-    
-    <!-- GLASSMORPHIC STATS CONTAINER -->
-    <div class="glass-card" id="metrics-card">
-      <div class="identity-label" id="user-display">
-        <span>USER: <span id="player-username" style="color: var(--neon-cyan)">@unknown_runner</span></span>
-        <span>UID: <span id="player-id" style="color: #cbd5e1">-</span></span>
+  <div class="app-wrapper">
+
+    <!-- ── Header ── -->
+    <header>
+      <div class="brand">
+        <span class="brand-name">CYBERCORE</span>
+        <span class="brand-ver">Energy Nexus v2.0</span>
+      </div>
+      <div class="status-pill">
+        <div class="pulse-dot"></div>
+        <span>NODE ONLINE</span>
+      </div>
+    </header>
+
+    <!-- ── Stats card ── -->
+    <div class="card">
+      <div class="identity-row">
+        <span>USER: <span class="user-val" id="el-username">@runner</span></span>
+        <span>ID: <span class="id-val" id="el-uid">-</span></span>
       </div>
 
-      <div class="metrics-score-group">
-        <div class="clicks-label">TOTAL EXTRACTED ENERGY</div>
-        <div class="clicks-display" id="clicks-board">0</div>
+      <div class="score-label">EXTRACTED ENERGY</div>
+      <div class="score-value" id="el-score">0</div>
+
+      <div class="score-meta">
+        <div class="stat-chip">SESSION <span id="el-session">+0</span></div>
+        <div class="stat-chip">CPS <span id="el-cps">0.0</span></div>
+        <div class="stat-chip">RANK <span id="el-rank-short">—</span></div>
       </div>
 
-      <!-- PROGRESS & LEVEL SYSTEM -->
-      <div class="progress-section">
-        <div class="progress-header">
-          <span class="level-badge" id="level-title">LVL 1: CORE NOVICE</span>
-          <span class="progress-fraction" id="progress-text">0 / 100</span>
-        </div>
-        <div class="progress-bar-container">
-          <div class="progress-fill" id="progress-visual-bar"></div>
-        </div>
+      <div class="level-row">
+        <span class="level-name" id="el-level-name">LVL 1 · CORE NOVICE</span>
+        <span class="level-frac" id="el-xp-frac">0 / 100</span>
       </div>
+      <div class="xp-track"><div class="xp-fill" id="el-xp-bar"></div></div>
+
+      <!-- Rank pips -->
+      <div class="rank-strip" id="el-rank-strip"></div>
     </div>
 
-    <!-- MAIN CENTRAL COIN TAP ELEMENT -->
-    <div class="core-interactor">
-      <!-- Rotating ambient ring -->
-      <div class="energy-ring"></div>
-      
-      <!-- Energy main button -->
-      <button class="btn-energy-core" id="energy-core-cta" aria-label="Tap to capture energy">
-        <div class="inner-glowing-eye">
-          <div class="core-power-icon" id="core-icon">⚡</div>
-          <div class="core-caption">TAP TO CAPTURE</div>
+    <!-- ── Core button ── -->
+    <div class="core-area" id="core-area">
+      <div class="ring ring-1"></div>
+      <div class="ring ring-2"></div>
+      <div class="ring ring-3"></div>
+      <button class="core-btn" id="core-btn" aria-label="Tap Energy Core">
+        <div class="core-inner">
+          <div class="core-icon" id="el-icon">⚡</div>
+          <div class="core-caption">TAP TO HARVEST</div>
         </div>
       </button>
     </div>
 
-    <!-- WALLET STYLING WITH TON CONNECT UI COMPLIANCE -->
-    <div class="wallet-connection-panel">
-      <p class="connect-text">Connect your TON-wallet for Airdrop logs</p>
-      <div class="ton-btn-container" id="ton-connect-btn"></div>
+    <!-- ── Milestones ── -->
+    <div class="card milestones-card">
+      <div class="section-label">ACHIEVEMENTS</div>
+      <div class="milestone-grid" id="el-milestones"></div>
     </div>
 
-    <!-- BATTERY SAVER TOGGLE PANEL -->
-    <div class="wallet-connection-panel" style="margin-top: 12px; border-color: rgba(0, 229, 255, 0.1);">
-      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-        <span class="connect-text" style="font-size: 0.75rem; letter-spacing: 0.5px; color: #94a3b8;">🔋 SYSTEM BATTERY SAVER</span>
-        <label class="switch-toggle">
-          <input type="checkbox" id="battery-saver-chk" style="opacity: 0; width: 0; height: 0;">
-          <span class="slider-toggle"></span>
-        </label>
+    <!-- ── Wallet ── -->
+    <div class="card wallet-card">
+      <div class="wallet-inner">
+        <div class="wallet-info">
+          <span class="wallet-title">TON Wallet</span>
+          <span class="wallet-desc">Connect for airdrops</span>
+        </div>
+        <div id="ton-connect-btn"></div>
       </div>
-      <p id="battery-saver-desc" style="font-size: 0.65rem; color: #64748b; font-family: 'Share Tech Mono', monospace; text-align: left; width: 100%; text-transform: uppercase; margin-top: 4px;">
-        STATUS: FULL POWER (60 FPS ANIMATION ACTIVE)
-      </p>
     </div>
 
-  </main>
-
-  <!-- APP TOAST SYSTEM -->
-  <div class="toast-overlay" id="alert-toast">
-    <div class="toast-icon">⚡ [SYS]:</div>
-    <div id="toast-message">Database initialized successfully. Happy tapping!</div>
+    <footer>
+      ENGINE: <a href="https://mybot-gx1a.onrender.com" target="_blank">MYBOT-GX1A</a>
+    </footer>
   </div>
 
-  <!-- FOOTER DOCUMENT DATA -->
-  <footer>
-    CONNECTED TO RENDER ENGINE: <a href="https://mybot-gx1a.onrender.com" target="_blank">MYBOT-GX1A</a><br>
-    DEVELOPED ACCORDING TO TELEGRAM SDK PRINCIPLES
-  </footer>
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <span class="toast-ico">⚡</span>
+    <span id="toast-msg">System online.</span>
+  </div>
 
-  <!-- CORE CONTROLLER APPLICATION CODE -->
   <script>
-    // 1. BACKEND ROUTE CONFIGURATION
-    const BACKEND_URL = "https://mybot-gx1a.onrender.com";
+  (() => {
+    /* ── Config ──────────────────────────────────────── */
+    const BACKEND = "https://mybot-gx1a.onrender.com";
+    const CB = "?cb=" + Math.random().toString(36).slice(2, 7);
 
-    // 2. STATE HANDLERS
-    let userState = {
-      telegram_id: 11112222, // default identifier fallback for external browsers
-      username: "external_core_runner",
+    /* ── Level definitions ───────────────────────────── */
+    const LEVELS = [
+      { threshold:    0, name: "CORE NOVICE",      icon: "⚡", short: "N1" },
+      { threshold:  100, name: "MATRIX RUNNER",    icon: "🔷", short: "M2" },
+      { threshold:  250, name: "GRID HACKER",      icon: "🔥", short: "G3" },
+      { threshold:  500, name: "SYNAPSE RACER",    icon: "☄️", short: "S4" },
+      { threshold: 1000, name: "VOID WALKER",      icon: "🌀", short: "V5" },
+      { threshold: 2000, name: "QUANTUM KING",     icon: "🔮", short: "Q6" },
+      { threshold: 5000, name: "NEXUS SOVEREIGN",  icon: "🧬", short: "X7" },
+    ];
+
+    /* ── Milestones ──────────────────────────────────── */
+    const MILESTONES = [
+      { req:    10, icon: "🎯", label: "FIRST 10"   },
+      { req:    50, icon: "💥", label: "50 CLICKS"  },
+      { req:   100, icon: "🏆", label: "CENTURY"    },
+      { req:   250, icon: "⚡", label: "SURGE"      },
+      { req:   500, icon: "🚀", label: "LAUNCH"     },
+      { req:  1000, icon: "🌟", label: "KILO-CORE"  },
+    ];
+
+    /* ── State ───────────────────────────────────────── */
+    const state = {
+      telegram_id: 11112222,
+      username: "external_runner",
       clicks: 0,
-      wallet: null
+      sessionClicks: 0,
+      wallet: null,
+      prevLevel: 0,
     };
 
-    // 3. INITIALIZE TELEGRAM WEBAPP SDK IF AVAILABLE
-    let tgSdk = null;
+    /* CPS tracker */
+    let cpsBuffer = [];
+    function recordClick() {
+      cpsBuffer.push(Date.now());
+      cpsBuffer = cpsBuffer.filter(t => Date.now() - t < 1000);
+    }
+    setInterval(() => {
+      document.getElementById("el-cps").textContent = cpsBuffer.length.toFixed(1);
+    }, 200);
+
+    /* ── Telegram SDK ────────────────────────────────── */
+    let tg = null;
     try {
-      if (window.Telegram && window.Telegram.WebApp) {
-        tgSdk = window.Telegram.WebApp;
-        tgSdk.ready();
-        tgSdk.expand();
-        
-        // Fetch real WebApp User details
-        if (tgSdk.initDataUnsafe && tgSdk.initDataUnsafe.user) {
-          const userObj = tgSdk.initDataUnsafe.user;
-          userState.telegram_id = userObj.id;
-          userState.username = userObj.username || `user_${userObj.id}`;
+      if (window.Telegram?.WebApp) {
+        tg = window.Telegram.WebApp;
+        tg.ready(); tg.expand();
+        const u = tg.initDataUnsafe?.user;
+        if (u) {
+          state.telegram_id = u.id;
+          state.username = u.username || `user_${u.id}`;
         }
       }
-    } catch(err) {
-      console.warn("Telegram WebApp system context undetected, standard simulation active.", err);
+    } catch(e) { console.warn("Telegram SDK not available", e); }
+
+    /* ── DOM refs ────────────────────────────────────── */
+    const elScore    = document.getElementById("el-score");
+    const elUsername = document.getElementById("el-username");
+    const elUid      = document.getElementById("el-uid");
+    const elSession  = document.getElementById("el-session");
+    const elLevelName= document.getElementById("el-level-name");
+    const elXpFrac   = document.getElementById("el-xp-frac");
+    const elXpBar    = document.getElementById("el-xp-bar");
+    const elIcon     = document.getElementById("el-icon");
+    const elRankShort= document.getElementById("el-rank-short");
+    const elRankStrip= document.getElementById("el-rank-strip");
+    const elMilestones=document.getElementById("el-milestones");
+    const coreBtn    = document.getElementById("core-btn");
+    const coreArea   = document.getElementById("core-area");
+
+    /* ── Init UI ─────────────────────────────────────── */
+    elUsername.textContent = `@${state.username}`;
+    elUid.textContent = state.telegram_id;
+
+    buildRankStrip();
+    buildMilestones();
+
+    function buildRankStrip() {
+      elRankStrip.innerHTML = "";
+      LEVELS.forEach((lvl, i) => {
+        const pip = document.createElement("div");
+        pip.className = "rank-pip";
+        pip.id = `pip-${i}`;
+        pip.textContent = lvl.short;
+        elRankStrip.appendChild(pip);
+      });
     }
 
-    // Reflect variables onto DOM UI inputs of Player Info block
-    document.getElementById("player-username").innerText = `@${userState.username}`;
-    document.getElementById("player-id").innerText = userState.telegram_id;
-
-    // Toast manager
-    function displayToast(msg) {
-      const toast = document.getElementById("alert-toast");
-      document.getElementById("toast-message").innerText = msg;
-      
-      toast.classList.add("active");
-      setTimeout(() => {
-        toast.classList.remove("active");
-      }, 3500);
+    function buildMilestones() {
+      elMilestones.innerHTML = "";
+      MILESTONES.forEach((m, i) => {
+        const el = document.createElement("div");
+        el.className = "milestone-item";
+        el.id = `ms-${i}`;
+        el.innerHTML = `
+          <div class="m-icon">${m.icon}</div>
+          <div>${m.label}</div>
+          <div class="m-req">${m.req} clicks</div>
+        `;
+        elMilestones.appendChild(el);
+      });
     }
 
-    // 4. LEVEL SYSTEM LOGIC
-    // Resets or levels up progress every 100 clicks
-    function updateLevelSystem(clicksCount) {
-      const level = Math.floor(clicksCount / 100) + 1;
-      const progressInLevel = clicksCount % 100;
-      
-      // Determine Rank Titles
-      let title = "LVL 1: CORE NOVICE";
-      if (level === 2) title = "LVL 2: MATRIX CHIPS";
-      else if (level === 3) title = "LVL 3: GRID RUNNER";
-      else if (level === 4) title = "LVL 4: SYNAPSE RACER";
-      else if (level >= 5) title = `LVL ${level}: QUANTUM KING`;
+    /* ── Update UI ───────────────────────────────────── */
+    function updateUI(clicks) {
+      elScore.textContent = clicks.toLocaleString();
+      elSession.textContent = `+${state.sessionClicks}`;
 
-      document.getElementById("level-title").innerText = title;
-      document.getElementById("progress-text").innerText = `${progressInLevel} / 100`;
-      document.getElementById("progress-visual-bar").style.width = `${progressInLevel}%`;
-
-      // Change Core graphics periodically
-      const iconSet = ["⚡", "⭐", "🔥", "☄️", "🔮", "🧬"];
-      const activeIconIndex = (level - 1) % iconSet.length;
-      document.getElementById("core-icon").innerText = iconSet[activeIconIndex];
-    }
-
-    // 5. FETCH VISUAL DATA SYNC
-    async function fetchUserData() {
-      try {
-        const queryParams = new URLSearchParams({
-          telegram_id: userState.telegram_id.toString(),
-          username: userState.username
-        });
-
-        const response = await fetch(`${BACKEND_URL}/api/user?${queryParams.toString()}`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        
-        const resObj = await response.json();
-        
-        if (resObj && resObj.success && resObj.data) {
-          userState.clicks = resObj.data.clicks || 0;
-          userState.wallet = resObj.data.wallet || null;
-          
-          // Refresh views
-          document.getElementById("clicks-board").innerText = userState.clicks.toLocaleString();
-          updateLevelSystem(userState.clicks);
-          
-          document.getElementById("host-name-text").innerText = "SYNC: Render Online";
-          document.getElementById("host-badge").style.color = "var(--neon-cyan)";
-          document.getElementById("host-badge").style.borderColor = "var(--glass-accent-border)";
-        }
-      } catch (err) {
-        console.error("Failed to call user fetch from Render, fallback offline active.", err);
-        displayToast("Connecting with fallback memory DB.");
-        
-        // Restore local UI details
-        document.getElementById("clicks-board").innerText = userState.clicks.toLocaleString();
-        updateLevelSystem(userState.clicks);
-        
-        document.getElementById("host-name-text").innerText = "SYNC: Off-Grid";
-        document.getElementById("host-badge").style.color = "var(--neon-magenta)";
-        document.getElementById("host-badge").style.borderColor = "rgba(255, 0, 127, 0.3)";
+      // Compute level
+      let levelIdx = 0;
+      for (let i = LEVELS.length - 1; i >= 0; i--) {
+        if (clicks >= LEVELS[i].threshold) { levelIdx = i; break; }
       }
-    }
+      const lvl = LEVELS[levelIdx];
+      const nextLvl = LEVELS[levelIdx + 1];
+      const baseXP = lvl.threshold;
+      const rangeXP = nextLvl ? nextLvl.threshold - baseXP : 100;
+      const inLevelXP = clicks - baseXP;
+      const pct = Math.min(100, (inLevelXP / rangeXP) * 100);
 
-    // Call fetch user on first screen render
-    fetchUserData();
+      elLevelName.textContent = `LVL ${levelIdx + 1} · ${lvl.name}`;
+      elXpFrac.textContent = nextLvl
+        ? `${inLevelXP} / ${rangeXP}`
+        : "MAX LEVEL";
+      elXpBar.style.width = pct + "%";
+      elIcon.textContent = lvl.icon;
+      elRankShort.textContent = lvl.short;
 
-    // 6. COIN ACTION & OPTIMISTIC SCORE UPDATES
-    const coreCta = document.getElementById("energy-core-cta");
-    
-    coreCta.addEventListener("click", async (e) => {
-      // Audio response trigger
-      try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx) {
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = "sine";
-          // Create beautiful cyber laser-like pitch slide
-          osc.frequency.setValueAtTime(450, audioCtx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.12);
-          gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start();
-          osc.stop(audioCtx.currentTime + 0.12);
-        }
-      } catch(audioErr) {}
+      // Rank pips
+      LEVELS.forEach((_, i) => {
+        const pip = document.getElementById(`pip-${i}`);
+        pip.className = "rank-pip" +
+          (i < levelIdx ? " unlocked" : i === levelIdx ? " current" : "");
+      });
 
-      // Tactile Web haptics 
-      if (tgSdk && tgSdk.HapticFeedback) {
-        tgSdk.HapticFeedback.impactOccurred("soft");
+      // Level-up flash
+      if (levelIdx > state.prevLevel) {
+        triggerLevelUp();
+        showToast(`⬆ LEVEL UP! ${lvl.name}`);
       }
+      state.prevLevel = levelIdx;
 
-      // Generate visual +1 floaters
-      const rect = coreCta.getBoundingClientRect();
-      const clickX = e.clientX || (e.touches && e.touches[0] && e.touches[0].clientX) || (rect.left + rect.width / 2);
-      const clickY = e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY) || (rect.top + rect.height / 2);
-      
-      const relativeX = clickX - rect.left;
-      const relativeY = clickY - rect.top;
-
-      // Spawn floater (skip if battery saver stylesheet class is toggled)
-      if (!document.body.classList.contains("battery-saver-ok")) {
-        const floater = document.createElement("span");
-        floater.className = "click-floater";
-        floater.innerText = "+1";
-        floater.style.left = `${relativeX}px`;
-        floater.style.top = `${relativeY}px`;
-        
-        coreCta.appendChild(floater);
-        setTimeout(() => {
-          floater.remove();
-        }, 800);
-      }
-
-      // OPTIMISTIC UPDATE: instant local upgrade
-      userState.clicks += 1;
-      document.getElementById("clicks-board").innerText = userState.clicks.toLocaleString();
-      updateLevelSystem(userState.clicks);
-
-      // Backend sync
-      try {
-        const syncResponse = await fetch(`${BACKEND_URL}/api/click`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ telegram_id: userState.telegram_id })
-        });
-        
-        if (syncResponse.ok) {
-          const syncData = await syncResponse.json();
-          if (syncData && syncData.clicks !== undefined) {
-            userState.clicks = syncData.clicks;
-            document.getElementById("clicks-board").innerText = userState.clicks.toLocaleString();
-            updateLevelSystem(userState.clicks);
-          }
-        }
-      } catch (syncErr) {
-        console.warn("Optimistic click post error:", syncErr);
-      }
-    });
-
-    // 7. TON CONNECT WALLET INITIALIZATION
-    let tonConnectUIInstance = null;
-    try {
-      const TonUIConstructor = window.TonConnectUI || (window.TON_CONNECT_UI && window.TON_CONNECT_UI.TonConnectUI);
-      
-      if (TonUIConstructor) {
-        tonConnectUIInstance = new TonUIConstructor({
-          manifestUrl: "https://maryoa61.github.io/mybot/tonconnect-manifest.json",
-          buttonRootId: "ton-connect-btn"
-        });
-
-        tonConnectUIInstance.onStatusChange(async (wallet) => {
-          if (wallet && wallet.account) {
-            const rawAddress = wallet.account.address;
-            const friendlyAddress = rawAddress.slice(0, 6) + "..." + rawAddress.slice(-4);
-            displayToast(`Connected TON Core: ${friendlyAddress}`);
-            await saveWalletToBackend(rawAddress);
-          } else {
-            userState.wallet = null;
-            displayToast("Wallet disconnected.");
-          }
-        });
-      } else {
-        console.error("TonConnectUI constructor not loaded by window objects.");
-      }
-    } catch (tonError) {
-      console.error("TON Connect initialize failed", tonError);
-    }
-
-    // 8. SYSTEM BATTERY SAVER CONTROLS
-    const batterySaverChk = document.getElementById("battery-saver-chk");
-    const batterySaverDesc = document.getElementById("battery-saver-desc");
-
-    if (batterySaverChk) {
-      batterySaverChk.addEventListener("change", (e) => {
-        try {
-          if (tgSdk && tgSdk.HapticFeedback) {
-            tgSdk.HapticFeedback.impactOccurred("light");
-          }
-        } catch (hep) {}
-
-        if (e.target.checked) {
-          document.body.classList.add("battery-saver-ok");
-          if (batterySaverDesc) {
-            batterySaverDesc.innerText = "STATUS: BATTERY SAVER ACTIVE (LOW POWER, STATIC BG)";
-            batterySaverDesc.style.color = "var(--neon-cyan)";
-          }
-          displayToast("Battery Saver active: Non-essential animations paused.");
-        } else {
-          document.body.classList.remove("battery-saver-ok");
-          if (batterySaverDesc) {
-            batterySaverDesc.innerText = "STATUS: FULL POWER (60 FPS ANIMATION ACTIVE)";
-            batterySaverDesc.style.color = "#64748b";
-          }
-          displayToast("Battery Saver disabled: Fluid graphics restored.");
+      // Milestones
+      MILESTONES.forEach((m, i) => {
+        if (clicks >= m.req) {
+          document.getElementById(`ms-${i}`).classList.add("done");
         }
       });
     }
 
-    // Helper POST logic to save bound address to Supabase
-    async function saveWalletToBackend(rawAddress) {
-      try {
-        const response = await fetch(`${BACKEND_URL}/api/wallet`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            telegram_id: userState.telegram_id,
-            wallet: rawAddress
-          })
-        });
+    function triggerLevelUp() {
+      const flash = document.getElementById("levelup-flash");
+      flash.classList.add("show");
+      setTimeout(() => flash.classList.remove("show"), 400);
+    }
 
-        if (response.ok) {
-          const data = await response.json();
-          displayToast("Wallet registered on Ledger!");
-          userState.wallet = rawAddress;
-        } else {
-          console.warn("Endpoint execution rejected wallet binding status.");
+    /* ── Toast ───────────────────────────────────────── */
+    let toastTimer = null;
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      document.getElementById("toast-msg").textContent = msg;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 3200);
+    }
+
+    /* ── Noise canvas ────────────────────────────────── */
+    (function initNoise() {
+      const canvas = document.getElementById("noise-layer");
+      const ctx = canvas.getContext("2d");
+      function draw() {
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const img = ctx.createImageData(canvas.width, canvas.height);
+        for (let i = 0; i < img.data.length; i += 4) {
+          const v = Math.random() * 255 | 0;
+          img.data[i] = img.data[i+1] = img.data[i+2] = v;
+          img.data[i+3] = 255;
         }
-      } catch (err) {
-        console.error("Failed to post wallet connection details to backend:", err);
+        ctx.putImageData(img, 0, 0);
+      }
+      draw();
+      setInterval(draw, 80);
+    })();
+
+    /* ── Audio helper ────────────────────────────────── */
+    function playClick() {
+      try {
+        const ac = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ac.createOscillator();
+        const g = ac.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(520, ac.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, ac.currentTime + .1);
+        g.gain.setValueAtTime(.05, ac.currentTime);
+        g.gain.exponentialRampToValueAtTime(.001, ac.currentTime + .1);
+        osc.connect(g); g.connect(ac.destination);
+        osc.start(); osc.stop(ac.currentTime + .1);
+      } catch(e) {}
+    }
+
+    /* ── Floater ─────────────────────────────────────── */
+    function spawnFloater(x, y) {
+      const f = document.createElement("span");
+      f.className = "floater";
+      f.textContent = "+1";
+      f.style.left = (x - coreArea.getBoundingClientRect().left) + "px";
+      f.style.top  = (y - coreArea.getBoundingClientRect().top)  + "px";
+      coreArea.appendChild(f);
+      setTimeout(() => f.remove(), 750);
+    }
+
+    /* ── Ripple ──────────────────────────────────────── */
+    function spawnRipple(x, y) {
+      const r = document.createElement("div");
+      r.className = "ripple";
+      r.style.left = x + "px";
+      r.style.top  = y + "px";
+      coreBtn.appendChild(r);
+      setTimeout(() => r.remove(), 600);
+    }
+
+    /* ── Fetch user ──────────────────────────────────── */
+    async function fetchUser() {
+      try {
+        const params = new URLSearchParams({
+          telegram_id: state.telegram_id,
+          username: state.username
+        });
+        const res = await fetch(`${BACKEND}/api/user?${params}${CB}`);
+        if (!res.ok) throw new Error(res.status);
+        const { success, data } = await res.json();
+        if (success && data) {
+          state.clicks = data.clicks || 0;
+          state.wallet = data.wallet || null;
+        }
+      } catch(e) {
+        showToast("Running on local cache.");
+      } finally {
+        updateUI(state.clicks);
       }
     }
+
+    fetchUser();
+
+    /* ── Click handler ───────────────────────────────── */
+    coreBtn.addEventListener("click", async (e) => {
+      playClick();
+      recordClick();
+
+      if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred("medium");
+
+      const rect  = coreBtn.getBoundingClientRect();
+      const cx = (e.clientX ?? rect.left + rect.width  / 2);
+      const cy = (e.clientY ?? rect.top  + rect.height / 2);
+      const bx = cx - rect.left;
+      const by = cy - rect.top;
+
+      spawnRipple(bx, by);
+      spawnFloater(cx, cy);
+
+      // Optimistic update
+      state.clicks++;
+      state.sessionClicks++;
+      updateUI(state.clicks);
+
+      // Flash score
+      elScore.classList.add("flash");
+      setTimeout(() => elScore.classList.remove("flash"), 100);
+
+      // Sync backend
+      try {
+        const res = await fetch(`${BACKEND}/api/click`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ telegram_id: state.telegram_id })
+        });
+        if (res.ok) {
+          const { clicks } = await res.json();
+          if (clicks !== undefined) {
+            state.clicks = clicks;
+            updateUI(state.clicks);
+          }
+        }
+      } catch(e) { /* fallback to local */ }
+    });
+
+    /* ── TON Connect ─────────────────────────────────── */
+    try {
+      if (typeof TonConnectUI !== 'undefined' && TonConnectUI.TonConnectUI) {
+        const tc = new TonConnectUI.TonConnectUI({
+          manifestUrl: "https://maryoa61.github.io/mybot/tonconnect-manifest.json",
+          buttonRootId: "ton-connect-btn"
+        });
+        tc.onStatusChange(async (wallet) => {
+          if (wallet?.account?.address) {
+            const addr = wallet.account.address;
+            const short = addr.slice(0, 6) + "…" + addr.slice(-4);
+            showToast(`Wallet linked: ${short}`);
+            try {
+              await fetch(`${BACKEND}/api/wallet`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ telegram_id: state.telegram_id, wallet: addr })
+              });
+              state.wallet = addr;
+            } catch(e) {}
+          } else {
+            state.wallet = null;
+          }
+        });
+      }
+    } catch(e) { console.error("TON Connect init error", e); }
+
+  })();
   </script>
 </body>
-    </html>
+</html>
